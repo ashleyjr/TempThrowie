@@ -1,25 +1,28 @@
 <?php
 
    // Commands
-   $temp_cmd = 'temp';
+   $device_cmd = 'device';
+   $data_cmd = 'data';
    $erase_cmd = 'erase';
    $print_cmd = 'print';
    $graph_cmd = 'graph';
-
-   // The data file
-   $file = "data.csv";
-
-   // The graph file
-   $graph = "graph.png";
-
+   
+   // Check the device is specified
+   if(0 !== strlen($_GET[$device_cmd])){
+      $file = $_GET[$device_cmd].".csv";
+      $graph = $_GET[$device_cmd].".png"; 
+   }else{
+      exit();
+   }
+   
    // Add data to file
-   if(strlen($_GET[$temp_cmd]) !== 0){
+   if(strlen($_GET[$data_cmd]) !== 0){
       if (file_exists($file)) {
          $fh = fopen($file, 'a');
       }else{
          $fh = fopen($file, 'w');
       }
-      fwrite($fh, $_GET['temp']."\n");
+      fwrite($fh, $_GET[$data_cmd]."\n");
       fclose($fh);
    }
    
@@ -34,7 +37,7 @@
    if(isset($_GET[$print_cmd])){
       if (file_exists($file)) {
          $homepage = file_get_contents($file);
-         echo nl2br($homepage);
+         echo $homepage;
       } 
    }
 
