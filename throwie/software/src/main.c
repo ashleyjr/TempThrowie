@@ -15,6 +15,7 @@ SBIT(LED,  SFR_P1, 1);
 // Prototypes
 //-----------------------------------------------------------------------------
 
+void  sleep(void);
 void  setup(void);
 
 //-----------------------------------------------------------------------------
@@ -22,15 +23,86 @@ void  setup(void);
 //-----------------------------------------------------------------------------
 
 void main (void){    
-   
-   setup();
-
-   LED = 0;
-
-   while(1);
-
+   sleep();
+   while(1){
+      LED = 0;
+      sleep();
+      LED = 1;
+      sleep();
+   };
 }
  
+//-----------------------------------------------------------------------------
+// Interrupt Vectors
+//-----------------------------------------------------------------------------
+
+INTERRUPT (TIMER1_ISR, TIMER1_IRQn){
+   IE = 0;
+}
+
+//-----------------------------------------------------------------------------
+// Setup micro
+//-----------------------------------------------------------------------------
+
+void sleep(void){
+
+   // Disabled watchdog
+   WDTCN    = 0xDE;
+   WDTCN    = 0xAD;
+
+   // Enabled LFOSC
+   //    - Set to 10KHz
+   OSCLCN = OSCLCN_OSCLEN__DISABLED;
+   OSCLCN = OSCLCN_OSCLEN__ENABLED |
+            OSCLCN_OSCLD__DIVIDE_BY_8;
+   
+
+   // Enabled T1 interrupt
+   IE   = IE_EA__ENABLED | 
+		    IE_ET1__ENABLED;
+   
+
+   // Configure T1
+   CKCON  = CKCON_T1M__PRESCALE|
+            CKCON_SCA__SYSCLK_DIV_48;  
+	TMOD   = TMOD_T1M__MODE1;	 
+   TL1    = 0xF0;
+   TH1    = 0xFF;
+   
+
+   // Main clock is the Low Frequency Clock 
+    while(1){
+      if(OSCLCN & OSCLCN_OSCLRDY__SET){
+         break;
+      }
+   }
+   CLKSEL = CLKSEL_CLKSL__LFOSC|
+            CLKSEL_CLKDIV__SYSCLK_DIV_128 ;
+   
+   // Start T1
+   TCON   = TCON_TR1__RUN;     
+
+
+   // Go to sleep
+   PCON = PCON_IDLE__IDLE ;
+   PCON = PCON;
+
+
+   // !!! Get woken up by timer
+   
+
+   // Clock
+	CLKSEL   = CLKSEL_CLKSL__HFOSC |			     
+              CLKSEL_CLKDIV__SYSCLK_DIV_1;
+
+ 
+                                                // Enable IOs
+   P1SKIP   = P1SKIP_B1__SKIPPED;
+   P1MDOUT  = P1MDOUT_B1__PUSH_PULL;
+   XBR2     = XBR2_WEAKPUD__PULL_UPS_DISABLED | 
+              XBR2_XBARE__ENABLED;					  
+}
+
 //-----------------------------------------------------------------------------
 // Setup micro
 //-----------------------------------------------------------------------------
@@ -53,7 +125,7 @@ void setup(void){
    XBR2     = XBR2_WEAKPUD__PULL_UPS_DISABLED | 
               XBR2_XBARE__ENABLED;					  
    // Timer control
-	CKCON    = CKCON_T0M__PRESCALE|
+	CKCON    = CKCON_T0M__SYSCLK|
               CKCON_SCA__SYSCLK_DIV_12;  
    // SMBus
    SMB0CF   = SMB0CF_INH__SLAVE_DISABLED|
