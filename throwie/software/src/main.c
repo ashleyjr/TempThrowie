@@ -23,6 +23,7 @@ volatile U8  payload[10];
 //-----------------------------------------------------------------------------
 
 void uartTx(U8 tx);
+void uartNum(U16 n);
 void sleep(void);
 
 //-----------------------------------------------------------------------------
@@ -41,7 +42,11 @@ void main (void){
       ptr = 0;
       sleep();
       LED = 1;
-      uartTx('A'); 
+      ADC0CN0 |= ADC0CN0_ADBUSY__SET;
+      while(ADC0CN0 & ADC0CN0_ADBUSY__SET);;
+      uartNum(ADC0);
+      uartTx('\n');
+      uartTx('\r'); 
       while(ptr < (8*4));
       LED = 0; 
    };
@@ -72,6 +77,22 @@ void uartTx(U8 tx){
    SCON0_TI = 0;
    SBUF0 = tx;
    while(!SCON0_TI); 
+}
+
+void uartNum(U16 tx){
+   U16 n;
+   U8 i;
+   U8 c [5];
+   n = tx; 
+   for(i=0;i<5;i++){
+      c[4-i] = (n % 10);
+      n = n - c[4-i];
+      n = n / 10;
+      c[4-i] += '0';
+   }
+   for(i=0;i<5;i++){
+      uartTx(c[i]); 
+   }
 }
 
 //-----------------------------------------------------------------------------
@@ -138,6 +159,17 @@ void sleep(void){
    XBR2     = XBR2_WEAKPUD__PULL_UPS_DISABLED | 
               XBR2_XBARE__ENABLED;
 
+   // ADC
+   ADC0MX   = ADC0MX_ADC0MX__TEMP; 
+   REF0CN   = REF0CN_REFSL__INTERNAL_LDO |
+              REF0CN_TEMPE__TEMP_ENABLED |
+              REF0CN_IREFLVL__1P65;
+   ADC0CF   = ADC0CF_ADGN__GAIN_1;
+   ADC0CF  |= 0x1F << ADC0CF_ADSC__SHIFT;
+   ADC0CN1  = ADC0CN1_ADCMBE__CM_BUFFER_ENABLED; 
+   ADC0CN0  = ADC0CN0_ADEN__ENABLED|
+              ADC0CN0_ADBUSY__SET; 
+   
    // Setup Timers
    CKCON    = CKCON_T1M__SYSCLK;  
 	TMOD     = TMOD_T1M__MODE2;
