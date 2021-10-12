@@ -17,7 +17,9 @@ SBIT(LED,  SFR_P1, 1);
 //-----------------------------------------------------------------------------
 
 volatile U16 ptr;
+volatile U16 ptr_stop;
 volatile U8  payload[10];
+
 //-----------------------------------------------------------------------------
 // Prototypes
 //-----------------------------------------------------------------------------
@@ -31,23 +33,24 @@ void sleep(void);
 //-----------------------------------------------------------------------------
 
 void main (void){     
-   
-   payload[0] = 'A';
-   payload[1] = 'A';
-   payload[2] = 'A';
-   payload[3] = 'A';
+  
+   ptr_stop = 5*8;;
+   payload[0] = 0b01010101;
+   payload[1] = 0b00110011;
+   payload[2] = 0b00001111; 
 
 
-   while(1){
-      ptr = 0;
-      sleep();
+   while(1){ 
+      sleep(); 
       LED = 1;
       ADC0CN0 |= ADC0CN0_ADBUSY__SET;
       while(ADC0CN0 & ADC0CN0_ADBUSY__SET);;
-      uartNum(ADC0);
-      uartTx('\n');
-      uartTx('\r'); 
-      while(ptr < (8*4));
+      
+      ptr = 0;
+      IE |= IE_EA__ENABLED;
+      payload[3] = ADC0L; 
+      payload[4] = ADC0H; 
+      while(ptr != ptr_stop); 
       LED = 0; 
    };
 }
@@ -63,10 +66,16 @@ INTERRUPT (TIMER0_ISR, TIMER0_IRQn){
 INTERRUPT (TIMER2_ISR, TIMER2_IRQn){           
    U8 bit_ptr;
    U8 byte_ptr;
-   bit_ptr  = ptr & 0x7;
-   byte_ptr = ptr >> 3;
-   MOD = 0x01 & (payload[byte_ptr] >> bit_ptr); 
-   ptr++;
+   if(ptr > ptr_stop){
+      MOD = 0;
+      IE = 0;
+   }else{
+      bit_ptr  = ptr & 0x7;
+      byte_ptr = ptr >> 3;
+      MOD = 0x01 & (payload[byte_ptr] >> bit_ptr); 
+      ptr++; 
+   }
+   TMR2CN &= ~TMR2CN_TF2H__SET;
 }
 
 //-----------------------------------------------------------------------------
@@ -179,14 +188,13 @@ void sleep(void){
   
    // Timer 2: Counter 10KHz
 	TMR2CN   = TMR2CN_TR2__RUN;
-   TMR2L    = 0xD7;
-   TMR2H    = 0xFF;
-   TMR2RLL  = 0xD7;
-   TMR2RLH  = 0xFF;
+   TMR2L    = 0x00;
+   TMR2H    = 0xFD;
+   TMR2RLL  = 0x00;
+   TMR2RLH  = 0xFD;
    
    // Interrupts
-   IE = IE_EA__ENABLED | 
-        IE_ET2__ENABLED;
+   IE = IE_ET2__ENABLED;
 }
 
 
