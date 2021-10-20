@@ -9,49 +9,80 @@
 // Defines
 //-----------------------------------------------------------------------------
 
+// #define DBG_LED
+// #define DBG_UART
+
+#define PRE             0xD5
+#define PRE_IDX         0
+// #define ID           0 // Defined in makefile
+#define ID_IDX          1
+#define TEMP_IDX        2
+#define BATT_IDX        3
+#define XOR_IDX         4
+#define PAY_SIZE_BYTES  5
+#define PAY_SIZE_BITS   (PAY_SIZE_BYTES*8)
+
 SBIT(MOD,  SFR_P0, 7);  
+#ifdef DBG_LED
 SBIT(LED,  SFR_P1, 1);  
+#endif // DBG_LED
 
 //-----------------------------------------------------------------------------
 // Global Variables
 //-----------------------------------------------------------------------------
 
-volatile U16 ptr;
-volatile U16 ptr_stop;
-volatile U8  payload[10];
+volatile U8 ptr;
+volatile U8 payload[PAY_SIZE_BYTES];
 
 //-----------------------------------------------------------------------------
 // Prototypes
 //-----------------------------------------------------------------------------
 
+#ifdef DBG_UART
 void uartTx(U8 tx);
 void uartNum(U16 n);
+#endif // DBG_UART
 void sleep(void);
 
 //-----------------------------------------------------------------------------
 // Main Routine
 //-----------------------------------------------------------------------------
 
-void main (void){     
-  
-   ptr_stop = 5*8;;
-   payload[0] = 0b01010101;
-   payload[1] = 0b00110011;
-   payload[2] = 0b00001111; 
-
-
+void main (void){      
+   payload[PRE_IDX] = PRE;
+   payload[ID_IDX]  = ID;
    while(1){ 
       sleep(); 
-      LED = 1;
+      
+      #ifdef DBG_LED
+      LED = 1; 
+      #endif // DBG_LED
+     
+      // Read Temp ADC
       ADC0CN0 |= ADC0CN0_ADBUSY__SET;
       while(ADC0CN0 & ADC0CN0_ADBUSY__SET);;
-      
+      payload[TEMP_IDX] = ADC0L; 
+
+      // Read Battery ADC
+      ADC0CN0 |= ADC0CN0_ADBUSY__SET;
+      while(ADC0CN0 & ADC0CN0_ADBUSY__SET);;
+      payload[BATT_IDX] = ADC0L; 
+
+      // Zero pointer and start sending 
       ptr = 0;
       IE |= IE_EA__ENABLED;
-      payload[3] = ADC0L; 
-      payload[4] = ADC0H; 
-      while(ptr != ptr_stop); 
+       
+      // Calculate XOR
+      payload[XOR_IDX]   = payload[ID_IDX]; 
+      payload[XOR_IDX]  ^= payload[TEMP_IDX];
+      payload[XOR_IDX]  ^= payload[BATT_IDX];
+      
+      // Wait until sent
+      while(ptr != PAY_SIZE_BITS); 
+      
+      #ifdef DBG_LED
       LED = 0; 
+      #endif // DBG_LED
    };
 }
  
@@ -66,22 +97,23 @@ INTERRUPT (TIMER0_ISR, TIMER0_IRQn){
 INTERRUPT (TIMER2_ISR, TIMER2_IRQn){           
    U8 bit_ptr;
    U8 byte_ptr;
-   if(ptr > ptr_stop){
+   if(ptr > PAY_SIZE_BITS){
       MOD = 0;
       IE = 0;
    }else{
       bit_ptr  = ptr & 0x7;
       byte_ptr = ptr >> 3;
-      MOD = 0x01 & (payload[byte_ptr] >> bit_ptr); 
+      MOD      = 0x01 & (payload[byte_ptr] >> bit_ptr); 
       ptr++; 
    }
    TMR2CN &= ~TMR2CN_TF2H__SET;
 }
 
 //-----------------------------------------------------------------------------
-// UART
+// Debug UART
 //-----------------------------------------------------------------------------
 
+#ifdef DBG_UART
 void uartTx(U8 tx){
    SCON0_TI = 0;
    SBUF0 = tx;
@@ -103,6 +135,7 @@ void uartNum(U16 tx){
       uartTx(c[i]); 
    }
 }
+#endif // DBG_UART
 
 //-----------------------------------------------------------------------------
 // Setup/sleep
@@ -160,11 +193,22 @@ void sleep(void){
               CLKSEL_CLKDIV__SYSCLK_DIV_1; 
    
    // Enable IOs
+   #ifdef DBG_UART
    P0MDOUT  = P0MDOUT_B4__PUSH_PULL|
               P0MDOUT_B7__PUSH_PULL;
+   #else
+   P0MDOUT  = P0MDOUT_B7__PUSH_PULL;
+   #endif // DBG_UART
+   
+   #ifdef DBG_LED
    P1SKIP   = P1SKIP_B1__SKIPPED; 
    P1MDOUT  = P1MDOUT_B1__PUSH_PULL;
+   #endif // DBG_LED
+   
+   #ifdef DBG_UART
    XBR0     = XBR0_URT0E__ENABLED;
+   #endif // DBG_UART
+   
    XBR2     = XBR2_WEAKPUD__PULL_UPS_DISABLED | 
               XBR2_XBARE__ENABLED;
 
@@ -181,11 +225,15 @@ void sleep(void){
    
    // Setup Timers
    CKCON    = CKCON_T1M__SYSCLK;  
-	TMOD     = TMOD_T1M__MODE2;
+	
+   // Tiemr 1: UART
+   #ifdef DBG_UART
+   TMOD     = TMOD_T1M__MODE2;
 	TCON     = TCON_TR1__RUN; 
-   TH1      = 0x96;  // Magic values from datasheet for 115200
+   TH1      = 0x96;           // Magic values from datasheet for 115200
 	TL1      = 0x96;
-  
+   #endif // DBG_UART
+
    // Timer 2: Counter 10KHz
 	TMR2CN   = TMR2CN_TR2__RUN;
    TMR2L    = 0x00;

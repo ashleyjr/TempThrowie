@@ -1,5 +1,7 @@
+ID=0
+
 all:
-	sdcc  src/main.c -I inc/ --iram-size 256 --xram-size 256 	
+	sdcc  src/main.c -I inc/ -DID=${ID} --iram-size 256 --xram-size 256 	
 
 clean:
 	rm -f *.o
