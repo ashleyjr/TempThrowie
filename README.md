@@ -28,10 +28,14 @@
 #### Temperature
 
    - Range between -10C and 50C
-   - In the transmitted byte encoding each increment is worth (60/256)C which is added to -10C
-
+   - In the transmitted byte encoding each increment is worth 0.234C ((50 - (-10))/256) 
+   - The offset is not calibrated
 
 #### Battery
+
+   - Range between 3.3V and 7V
+   - In the transmitted byte encoding each increment is worth 0.014V ((7 - 3.3)/256) 
+   - The offset is calibrated and 0 represent the lower voltage
 
 
 
