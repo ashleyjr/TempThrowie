@@ -23,6 +23,38 @@
       - Byte3: The battery reading
       - Byte4: XOR (Byte3 ^ (Byte2 ^ Byte1))  
 
+#### Collisions
+
+   - Within a collection of throwwies the transmit intervals are asynchronous
+   
+   - A packet is transmitted every 10 minutes
+   
+   - The 40 bits in each packet takes 40ms to transmit
+
+   - Probability of a collision
+
+      - x = ((n-1) * d) / t
+
+      - n = Number of thowies in collection
+
+      - d = Duration of tranmissions (seconds) = 0.04
+
+      - t = Transmit interval (seconds) = 600
+
+   - Probability of failure when n is
+
+      - 2:     x = 0,04 / 600          = 6.6 * 10^-5
+      - 10:    x = (9 * 0,04) / 600    = 6   * 10^-4
+      - 256:   x = (255 * 0,04) / 600  = 1.7 * 10^-2
+   
+   - Mean time between failure at 144 transmissions a day when n is
+      
+      - 2:     105 days 
+      - 10:    12 days    
+      - 256:   0.41 days
+
+   - **This does not include failures caused by interference from other devices**
+
 ### Measurements
 
 #### Temperature
