@@ -10,16 +10,22 @@
 //-----------------------------------------------------------------------------
 
 // #define DBG_LED
-// #define DBG_UART
+#define DBG_UART
 
-#define PRE             0xD5
-#define PRE_IDX         0
+#define PRE_0           0x55
+#define PRE_0_IDX       0
+#define PRE_1           0x55
+#define PRE_1_IDX       1
+#define PRE_2           0xCC
+#define PRE_2_IDX       2
 // #define ID           0 // Defined in makefile
-#define ID_IDX          1
-#define TEMP_IDX        2
-#define BATT_IDX        3
-#define XOR_IDX         4
-#define PAY_SIZE_BYTES  5
+#define ID_IDX          3
+#define ID_N_IDX        4
+#define TEMP_IDX        5
+#define TEMP_N_IDX      6
+#define BATT_IDX        7
+#define BATT_N_IDX      8
+#define PAY_SIZE_BYTES  9
 #define PAY_SIZE_BITS   (PAY_SIZE_BYTES*8)
 
 SBIT(MOD,  SFR_P0, 7);  
@@ -48,10 +54,15 @@ void sleep(void);
 // Main Routine
 //-----------------------------------------------------------------------------
 
-void main (void){      
-   payload[PRE_IDX] = PRE;
-   payload[ID_IDX]  = ID;
-   while(1){ 
+void main (void){       
+   payload[PRE_0_IDX] = PRE_0;
+   payload[PRE_1_IDX] = PRE_1;
+   payload[PRE_2_IDX] = PRE_2; 
+   payload[ID_IDX]    =  ID;
+   payload[ID_N_IDX]  = ~ID;
+   
+   for(;;){ 
+       
       sleep(); 
       
       #ifdef DBG_LED
@@ -59,26 +70,42 @@ void main (void){
       #endif // DBG_LED
      
       // Read Temp ADC
-      ADC0CN0 |= ADC0CN0_ADBUSY__SET;
-      while(ADC0CN0 & ADC0CN0_ADBUSY__SET);;
-      payload[TEMP_IDX] = ADC0L; 
+      ADC0MX   = ADC0MX_ADC0MX__TEMP;   
+      REF0CN   = REF0CN_REFSL__INTERNAL_LDO |
+                 REF0CN_TEMPE__TEMP_ENABLED; 
+      ADC0CF   = ADC0CF_ADTM__TRACK_DELAYED;         
+      ADC0CN0  = ADC0CN0_ADEN__ENABLED | 
+                 ADC0CN0_ADBUSY__SET;
+      while(~ADC0CN0 & ADC0CN0_ADINT__SET); 
+      payload[TEMP_IDX]   = ADC0; 
+      payload[TEMP_N_IDX] = ~payload[TEMP_IDX]; 
+      
 
-      // Read Battery ADC
-      ADC0CN0 |= ADC0CN0_ADBUSY__SET;
-      while(ADC0CN0 & ADC0CN0_ADBUSY__SET);;
-      payload[BATT_IDX] = ADC0L; 
-
+      // Read Battery ADC 
+      ADC0MX   = ADC0MX_ADC0MX__ADC0P12;
+      REF0CN   = REF0CN_REFSL__VDD_PIN;  
+      ADC0CF   = ADC0CF_ADTM__TRACK_DELAYED;         
+      ADC0CN0  = ADC0CN0_ADEN__ENABLED | 
+                 ADC0CN0_ADBUSY__SET;
+      while(~ADC0CN0 & ADC0CN0_ADINT__SET); 
+      payload[BATT_IDX]   = ADC0; 
+      payload[BATT_N_IDX] = ~payload[BATT_IDX]; 
+      
       // Zero pointer and start sending 
       ptr = 0;
-      IE |= IE_EA__ENABLED;
-       
-      // Calculate XOR
-      payload[XOR_IDX]   = payload[ID_IDX]; 
-      payload[XOR_IDX]  ^= payload[TEMP_IDX];
-      payload[XOR_IDX]  ^= payload[BATT_IDX];
+      IE |= IE_EA__ENABLED; 
       
       // Wait until sent
       while(ptr != PAY_SIZE_BITS); 
+    
+      #ifdef DBG_UART
+      uartTx('T');
+      uartTx(':');
+      uartNum(payload[TEMP_IDX]);
+      uartTx('B');
+      uartTx(':');
+      uartNum(payload[BATT_IDX]);
+      #endif  
       
       #ifdef DBG_LED
       LED = 0; 
@@ -104,10 +131,11 @@ INTERRUPT (TIMER2_ISR, TIMER2_IRQn){
       bit_ptr  = ptr & 0x7;
       byte_ptr = ptr >> 3;
       MOD      = 0x01 & (payload[byte_ptr] >> bit_ptr); 
-      ptr++; 
+      ptr++;
    }
    TMR2CN &= ~TMR2CN_TF2H__SET;
 }
+
 
 //-----------------------------------------------------------------------------
 // Debug UART
@@ -134,6 +162,8 @@ void uartNum(U16 tx){
    for(i=0;i<5;i++){
       uartTx(c[i]); 
    }
+   uartTx('\n'); 
+   uartTx('\r');
 }
 #endif // DBG_UART
 
@@ -211,17 +241,6 @@ void sleep(void){
    
    XBR2     = XBR2_WEAKPUD__PULL_UPS_DISABLED | 
               XBR2_XBARE__ENABLED;
-
-   // ADC
-   ADC0MX   = ADC0MX_ADC0MX__TEMP; 
-   REF0CN   = REF0CN_REFSL__INTERNAL_LDO |
-              REF0CN_TEMPE__TEMP_ENABLED |
-              REF0CN_IREFLVL__1P65;
-   ADC0CF   = ADC0CF_ADGN__GAIN_1;
-   ADC0CF  |= 0x1F << ADC0CF_ADSC__SHIFT;
-   ADC0CN1  = ADC0CN1_ADCMBE__CM_BUFFER_ENABLED; 
-   ADC0CN0  = ADC0CN0_ADEN__ENABLED|
-              ADC0CN0_ADBUSY__SET; 
    
    // Setup Timers
    CKCON    = CKCON_T1M__SYSCLK;  
