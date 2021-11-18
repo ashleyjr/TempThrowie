@@ -1,0 +1,22 @@
+TODOS
+-----
+
+A list of improvement which can be made move form RevA to RevB
+
+- Does not oscillate so need to pay more attention to critical path layout
+- Antenna pad can reduce width in half
+- Battery measurment pin needs to move to P0.[0..7] or P1.[0..3] 
+   - Confirm new pin works in SW before fab
+- All 0603 pads can be 30% bigger on all sides
+- SOT23 pads can be 50% longer
+- LDO pads can be 50% longer
+- Longer inductor can become 7.5mm long
+- Remove silkscreen on inductors
+- Get year right on silkscreen
+- Update month on silkscreen
+- Thermal relief more important than thought on power pins
+- Full silk underneath SAW
+- Full ground stitch beneath SAW
+- Make battery holes same dia as inductor holes
+- Silk next to testpoints
+
