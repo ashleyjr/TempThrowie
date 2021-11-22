@@ -3,6 +3,9 @@ TODOS
 
 A list of improvement which can be made move form RevA to RevB
 
+- SAW pins are incorrect
+- SAW way not connected directly to ground
+
 - Does not oscillate so need to pay more attention to critical path layout
 - Antenna pad can reduce width in half
 - Battery measurment pin needs to move to P0.[0..7] or P1.[0..3] 
