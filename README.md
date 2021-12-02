@@ -13,19 +13,22 @@
 
 #### Packet
 
-   - A packet is formed of 5 bytes
+   - A packet is formed of 64 bytes
    - Each byte is sent least signifiant bit first in the following order
      with no spaces
 
-      - Byte0: The preamble 0xD5/0b11010101
-      - Byte1: The throwie identity (ID)
-      - Byte2: The temperature reading
-      - Byte3: The battery reading
-      - Byte4: XOR (Byte3 ^ (Byte2 ^ Byte1))  
+      - Byte0:  The preamble code 0xAA/0x10101010
+         ...
+      - Byte58: The preamble code 0xAA/0x10101010
+      - Byte59: The start code 0x6A/0b01101010
+      - Byte60: The throwie identity (ID)
+      - Byte61: The temperature reading
+      - Byte62: The battery reading
+      - Byte63: XOR (Byte3 ^ (Byte2 ^ Byte1))  
 
 #### Collisions
 
-   - Within a collection of throwwies the transmit intervals are asynchronous
+   - Within a collection of throwies the transmit intervals are asynchronous
    
    - A packet is transmitted every 10 minutes
    
@@ -74,6 +77,18 @@
 
 ### Hardware
 
+   - TODO: Spec RF receiver
+
+   - The microcontroller is continually monitoring the output of the receiver 
+   - The sample rate is 2KHz
+   - Every bit is placed in to a ring buffer 
+   - There is a pattern detector searching for the code
+
+      - Byte0: 0x?1?0?1?0
+         ...
+      - Bytes7: 0x?1?0?1?0
+      - Bytes8: 0x?1?1?0?0
+
 ### Computer
 
    - The receiver hardware is connected to a host computer using a serial port
@@ -81,18 +96,13 @@
    
       - Has a baud rate of 115200
       - Transmits 1 start bit 
-      - Trasnmits 8 bit data frame most significant bit first
-
-   - All data is contained within a single SQLite database
-
-      - The database is named **throwie.db**
+      - Transmits 8 bit data frame most significant bit first 
    
    - There are two scripts running on the computer
 
-      - The *Logging Script* is continuously running and writea to the database
-      - The *Analysis Script* may be envoked at anytime and reada the database
-      
-  
+      - The *Logging Script* is continuously running and writing data
+      - The *Analysis Script* may be envoked at anytime and reads the data
+       
 #### Logging Script
 
    - The script is called *base.py*
@@ -113,15 +123,17 @@
       - When the buffer is fully drained the left hand side contains the first byte
         recieved and right hand side contained the last byte recieved
 
-   - The string is written to the database
+   - The string is written to a log file
 
-      - The table written to is called YYYYMMDD
+      - The file is called **throwie_YYYYMMDD_HHSS.log**
 
          - Y = Year
          - M = Month
          - D = Day
+         - H = Hour (24h)
+         - M = Minute
 
-      - If the table does not exist it will be created
+      - The file is located in the same directory as the script  
 
 #### Analysis Script
 
