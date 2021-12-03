@@ -75,45 +75,50 @@
 
 ## Receiver
 
+### The serial port 
+   
+   - Has a baud rate of 115200
+   - Transmits 1 start bit 
+   - Transmits 8 bit data frame most significant bit first 
+   
 ### Hardware
 
    - TODO: Spec RF receiver
 
    - The microcontroller is continually monitoring the output of the receiver 
-   - The sample rate is 2KHz
-   - Every bit is placed in to a ring buffer 
-   - There is a pattern detector searching for the code
+   - The sample rate is 2KHz 
+   - There is a pattern detector searching for the following 8 bytes
 
-      - Byte0: 0x?1?0?1?0
+      - Byte0: 0b?1?0?1?0
          ...
-      - Bytes7: 0x?1?0?1?0
-      - Bytes8: 0x?1?1?0?0
+      - Bytes6: 0b?1?0?1?0
+      - Bytes7: 0b?0?1?1?0
+
+   - When the code is detected the next 8 bytes are placed in to a buffer
+     and immediately transmitted over the serial port
+   - When the last byte is transmitted the microcontroller goes back to 
+     pattern detection
 
 ### Computer
 
-   - The receiver hardware is connected to a host computer using a serial port
-   - The serial port 
-   
-      - Has a baud rate of 115200
-      - Transmits 1 start bit 
-      - Transmits 8 bit data frame most significant bit first 
-   
+   - The receiver hardware is connected to a host computer using a serial port   
    - There are two scripts running on the computer
 
-      - The *Logging Script* is continuously running and writing data
+      - The *Logging Script* is continuously running and writing data 
       - The *Analysis Script* may be envoked at anytime and reads the data
        
 #### Logging Script
 
-   - The script is called *base.py*
+   - The script is called *throwieLogging.py*
    - The serial port is continuously monitored 
    
       - When a frame is received a timeout window opens 
-      - The window closes when no frame is recieved for 1 second
+      - The window closes when no frame is recieved for 2 seconds
       - While the window is open all frames received are placed in to a buffer
-      - The depth of the buffer is 10000 Bytes
-      - If more than 10000 Bytes are recieved the entire buffer is discarded and the
-        window is closed with an empty buffer
+      - The depth of the buffer is 500 Bytes
+
+         - As the sample rate of the microcontroller is 2KHz it is impossible to 
+           overflow this buffer
 
    - When the timeout window closes 
       
@@ -136,5 +141,18 @@
       - The file is located in the same directory as the script  
 
 #### Analysis Script
+
+   - The script is called *throwieAnalysis.py*
+   - The setup phase
+
+      - Will open every log file in chronological order
+      - Create a list of transmissions containing 
+
+         - The date
+         - The time
+         - The 
+
+      - If the log file contains 8 bytes of data it will analyse 
+
 
 
