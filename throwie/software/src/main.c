@@ -11,22 +11,20 @@
 
 // #define DBG_LED
 #define DBG_UART
-
-#define PRE_0           0x55
-#define PRE_0_IDX       0
-#define PRE_1           0x55
-#define PRE_1_IDX       1
-#define PRE_2           0xCC
-#define PRE_2_IDX       2
-// #define ID           0 // Defined in makefile
-#define ID_IDX          3
-#define ID_N_IDX        4
-#define TEMP_IDX        5
-#define TEMP_N_IDX      6
-#define BATT_IDX        7
-#define BATT_N_IDX      8
-#define PAY_SIZE_BYTES  9
-#define PAY_SIZE_BITS   (PAY_SIZE_BYTES*8)
+// #define ID              0 // Defined in makefile
+#define ID_IDX             0
+#define TEMP_IDX           1
+#define BATT_IDX           2
+#define XOR_IDX            3
+#define PAY_SIZE_BYTES     4
+#define PAY_SIZE_BITS      (8*PAY_SIZE_BYTES)
+#define PRE_SIZE_BYTES     59
+#define PRE_SIZE_BITS      (8*PRE_SIZE_BYTES)
+#define SRT_SIZE_BYTES     1
+#define SRT_SIZE_BITS      (8*SRT_SIZE_BYTES)
+#define PRE_SRT_SIZE_BITS  (PRE_SIZE_BITS+SRT_SIZE_BITS)
+#define PKT_SIZE_BITS      (PRE_SIZE_BITS+SRT_SIZE_BITS+PAY_SIZE_BITS)
+#define SRT_CODE           0x6A
 
 SBIT(MOD,  SFR_P0, 7);  
 #ifdef DBG_LED
@@ -37,7 +35,7 @@ SBIT(LED,  SFR_P1, 1);
 // Global Variables
 //-----------------------------------------------------------------------------
 
-volatile U8 ptr;
+volatile U16 ptr;
 volatile U8 payload[PAY_SIZE_BYTES];
 
 //-----------------------------------------------------------------------------
@@ -55,12 +53,7 @@ void sleep(void);
 //-----------------------------------------------------------------------------
 
 void main (void){       
-   payload[PRE_0_IDX] = PRE_0;
-   payload[PRE_1_IDX] = PRE_1;
-   payload[PRE_2_IDX] = PRE_2; 
-   payload[ID_IDX]    =  ID;
-   payload[ID_N_IDX]  = ~ID;
-   
+   payload[ID_IDX] = ID; 
    for(;;){ 
        
       sleep(); 
@@ -77,9 +70,7 @@ void main (void){
       ADC0CN0  = ADC0CN0_ADEN__ENABLED | 
                  ADC0CN0_ADBUSY__SET;
       while(~ADC0CN0 & ADC0CN0_ADINT__SET); 
-      payload[TEMP_IDX]   = ADC0; 
-      payload[TEMP_N_IDX] = ~payload[TEMP_IDX]; 
-      
+      payload[TEMP_IDX] = ADC0;  
 
       // Read Battery ADC 
       ADC0MX   = ADC0MX_ADC0MX__ADC0P12;
@@ -88,15 +79,19 @@ void main (void){
       ADC0CN0  = ADC0CN0_ADEN__ENABLED | 
                  ADC0CN0_ADBUSY__SET;
       while(~ADC0CN0 & ADC0CN0_ADINT__SET); 
-      payload[BATT_IDX]   = ADC0; 
-      payload[BATT_N_IDX] = ~payload[BATT_IDX]; 
+      payload[BATT_IDX] = ADC0;  
+      
+      // XOR
+      payload[XOR_IDX] = payload[ID_IDX] ^
+                         payload[TEMP_IDX] ^
+                         payload[BATT_IDX];
       
       // Zero pointer and start sending 
       ptr = 0;
       IE |= IE_EA__ENABLED; 
       
       // Wait until sent
-      while(ptr != PAY_SIZE_BITS); 
+      while(ptr != PKT_SIZE_BITS); 
     
       #ifdef DBG_UART
       uartTx('T');
@@ -122,16 +117,32 @@ INTERRUPT (TIMER0_ISR, TIMER0_IRQn){
 }
 
 INTERRUPT (TIMER2_ISR, TIMER2_IRQn){           
-   U8 bit_ptr;
-   U8 byte_ptr;
-   if(ptr > PAY_SIZE_BITS){
-      MOD = 0;
-      IE = 0;
-   }else{
-      bit_ptr  = ptr & 0x7;
-      byte_ptr = ptr >> 3;
-      MOD      = 0x01 & (payload[byte_ptr] >> bit_ptr); 
+   U8 bt; 
+   U8 by;
+   
+   if(ptr < PRE_SIZE_BITS){
+      // PREAMBLE STAGE
+      MOD = ptr % 2; 
       ptr++;
+   }else{
+      if(ptr < PRE_SRT_SIZE_BITS){
+         // START STAGE
+         bt  = SRT_CODE >> (ptr -  PRE_SIZE_BITS);
+         MOD = bt & 0x01;
+         ptr++;
+      }else{
+         if (ptr < PKT_SIZE_BITS){
+            // PAYLOAD STAGE
+            bt  = (ptr - PRE_SRT_SIZE_BITS); 
+            by  = bt / 8;
+            bt  = bt - (by * 8);
+            MOD = 0x01 & (payload[by] >> bt); 
+            ptr++;
+         }else{
+            // STALL
+            MOD = 0;
+         }
+      }
    }
    TMR2CN &= ~TMR2CN_TF2H__SET;
 }
