@@ -137,8 +137,7 @@ INTERRUPT (TIMER2_ISR, TIMER2_IRQn){
          ptr = BUFFER_DEPTH_BITS-1;
       }else{
          ptr--;
-      }
-    
+      } 
    }while(ptr != buffer_head); 
 
    if(found){
@@ -156,6 +155,12 @@ INTERRUPT (TIMER2_ISR, TIMER2_IRQn){
       }while(ptr != buffer_head);  
       uartTx('\n');
       uartTx('\r');
+
+      // Clear the buffer
+      for(i=0;i<BUFFER_DEPTH_BYTES;i++){
+         buffer[i] = 0x00;
+      }
+
    }
    // Buffer read to access 
    SAMPLE = 0; 
