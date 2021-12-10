@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 class DiscreteSim:
 
     def __init__(   self,
-                    timestep_s = 1e-4):
+                    timestep_s = 1e-6):
         self.__time_s = 0
         self.timestep_s = timestep_s
 
@@ -15,53 +15,47 @@ class DiscreteSim:
 class SquareWave(DiscreteSim):
 
     def __init__(   self,
-                    timestep_s  = 1e-4,
+                    timestep_s  = 1e-6,
                     freq_hz     = 1e3,
-                    sim_s       = 6e-3,
                     phase_deg   = 0):
         DiscreteSim.__init__(self, timestep_s)
+
         self.__freq_hz    = freq_hz
-        self.__period_s   = 1 / freq_hz
-        self.__sim_s      = sim_s
+        self.period_s     = 1 / freq_hz
         self.__phase_deg  = phase_deg
-        self.__time_s     = 0
-        self.__cycle      = self.__period_s * (phase_deg/360)
+        self.cycle        = self.period_s * (phase_deg/360)
 
     def getOutput(self):
-        return 1 if self.__cycle > (self.__period_s/2) else 0
+        return 1 if self.cycle > (self.period_s/2) else 0
 
     def tick(self):
         DiscreteSim.tick(self)
-        self.__cycle  += self.timestep_s
-        self.__cycle  %= self.__period_s
+        self.cycle  += self.timestep_s
+        self.cycle  %= self.period_s
 
-class Pll(SquareWave):
-
+class Vco(SquareWave):
     def __init__(   self,
-                    timestep_s  = 1e-4,
-                    freq_hz     = 1e3,
-                    sim_s       = 6e-3,
-                    phase_deg   = 0):
+                    timestep_s  = 1e-6,
+                    min_freq_hz = 1e3,
+                    max_freq_hz = 1e6):
+        SquareWave.__init__(self, timestep_s)
+        self.__max_period_s = 1 / float(min_freq_hz)
+        self.__min_period_s = 1 / float(max_freq_hz)
+        self.period_s = self.__max_period_s
+        self.cycle  = 0
 
-        SquareWave.__init__(self, timestep_s, freq_hz, sim_s, phase_deg)
-        self.i = 0
-
-    def setInput(self, i):
-        self.i = i
-
-    def getOutput(self):
-        return self.last
-
-    def tick(self):
-        SquareWave.tick(self)
-        self.last = self.i
+    def control(self, c):
+        self.period_s += c
+        if self.period_s > self.__max_period_s:
+            self.period_s = self.__max_period_s
+        if self.period_s < self.__max_period_s:
+            self.period_s = self.__min_period_s
 
 class Scope(DiscreteSim):
 
     def __init__(   self,
-                    timestep_s = 1e-4,
+                    timestep_s = 1e-6,
                     channels   = 1):
-
         DiscreteSim.__init__(self, timestep_s)
         self.__channels = channels
         self.__samples = []
@@ -78,8 +72,9 @@ class Scope(DiscreteSim):
         for c in range(self.__channels):
             plt.subplot(self.__channels, 1, c+1)
             plt.plot(t, self.__samples[c])
+            plt.xlim(0,t[-1])
         plt.xlabel("Time (s)")
-        plt.savefig(filename)
+        plt.savefig(filename, dpi=150)
 
     def tick(self):
         DiscreteSim.tick(self)
@@ -87,14 +82,15 @@ class Scope(DiscreteSim):
             self.__samples[c].append(self.__sample[c])
 
 def main(argv):
-    wave = SquareWave(timestep_s=1e-6)
-    scope = Scope(timestep_s=1e-6,channels=2)
-
+    wave = SquareWave()
+    vco = Vco()
+    scope = Scope(channels=2)
     for i in range(10000):
         scope.measure(wave.getOutput(),0)
-        scope.measure(wave.getOutput(),1)
+        scope.measure(vco.getOutput(),1)
         scope.tick()
         wave.tick()
+        vco.tick()
     scope.saveScreen("graph.png")
 
 if "__main__" == __name__:
