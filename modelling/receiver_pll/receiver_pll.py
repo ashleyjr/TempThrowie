@@ -68,13 +68,12 @@ class PhaseDet(DiscreteSim):
         reset      = self.up & self.dn
         self.up    = 0 if(reset) else self.up
         self.dn    = 0 if(reset) else self.dn
-        self.phase = self.dn - self.up
-
+        self.phase = self.up - self.dn
 
 class Lf(DiscreteSim):
     def __init__(   self,
                     timestep_s  = 1e-6,
-                    f           = 20):
+                    f           = 50):
         DiscreteSim.__init__(self, timestep_s)
         self.x = 0
         self.y_0 = 0
@@ -95,34 +94,11 @@ class Lf(DiscreteSim):
         self.y_0  = self.alpha * self.x
         self.y_0 += self.beta * self.y_1
 
-
-class Integrator(DiscreteSim):
-    def __init__(   self,
-                    timestep_s  = 1e-6):
-        DiscreteSim.__init__(self, timestep_s)
-        self.x = 0
-        self.x_0 = 0
-        self.x_1 = 0
-        self.integral = 0
-
-    def setInput(self, x):
-        self.x = x
-
-    def getOutput(self):
-        return self.integral
-
-    def tick(self):
-        DiscreteSim.tick(self)
-        self.x_1 = self.x_0
-        self.x_0 = self.x
-        self.integral += ((self.x_0 + self.x_1) / 2)
-
-
 class Pid(DiscreteSim):
     def __init__(   self,
                     timestep_s  = 1e-6,
-                    p           = 2e-3,
-                    i           = 1e-7):
+                    p           = 11000,
+                    i           = 3):
         DiscreteSim.__init__(self, timestep_s)
         self.p = p
         self.i = i
@@ -143,36 +119,23 @@ class Pid(DiscreteSim):
         self.y  = self.x_0 * self.p
         self.y += self.integral * self.i
 
-
-class Vco(DiscreteSim):
+class Vco(SquareWave):
     def __init__(   self,
                     timestep_s  = 1e-6,
-                    min_freq_hz = 1500,
-                    max_freq_hz = 2500):
-        DiscreteSim.__init__(self, timestep_s)
+                    min_freq_hz = 100,
+                    max_freq_hz = 10000):
+        SquareWave.__init__(self, timestep_s)
         self.__max_period_s = 1 / float(min_freq_hz)
         self.__min_period_s = 1 / float(max_freq_hz)
-        self.period_s = 1e-2
-        self.cycle  = 0
+        self.period_s = self.__max_period_s
+        self.cycle = 0
 
     def control(self, c):
-        self.period_s = c
+        self.period_s = (1/(1+c))
         if self.period_s > self.__max_period_s:
             self.period_s = self.__max_period_s
         if self.period_s < self.__min_period_s:
             self.period_s = self.__min_period_s
-
-    def getPeriodS(self):
-        return self.period_s
-
-    def getOutput(self):
-        return 1 if self.cycle > (self.period_s/2) else 0
-
-    def tick(self):
-        DiscreteSim.tick(self)
-        self.cycle += self.timestep_s
-        if self.cycle >= self.period_s:
-            self.cycle = 0
 
 class Div2(DiscreteSim):
     def __init__(   self,
@@ -195,7 +158,6 @@ class Div2(DiscreteSim):
         clk = (self.x_0 == 1) and (self.x_1 == 0)
         if(clk):
             self.y = 1 - self.y
-
 
 class Scope(DiscreteSim):
 
@@ -237,15 +199,13 @@ def main(argv):
     wave = SquareWave(phase_deg=66)
     vco = Vco()
     pd = PhaseDet()
-    igr = Integrator()
     pid = Pid()
     lf = Lf()
     div = Div2()
-    scope = Scope(channels=6)
-    for i in range(50000):
+    scope = Scope(channels=5)
+    for i in range(30000):
         pd.setRef(wave.getOutput())
         pd.setVco(div.getOutput())
-        igr.setInput(pd.getOutput())
         lf.setInput(pd.getOutput())
         pid.setInput(lf.getOutput())
         vco.control(pid.getOutput())
@@ -255,8 +215,6 @@ def main(argv):
         scope.measure(lf.getOutput(),2)
         scope.measure(pid.getOutput(),3)
         scope.measure(vco.getOutput(),4)
-        scope.measure(vco.getPeriodS(),5)
-        igr.tick()
         lf.tick()
         div.tick()
         pd.tick()
