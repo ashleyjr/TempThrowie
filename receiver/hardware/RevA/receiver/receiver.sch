@@ -629,12 +629,679 @@ Connection ~ 3750 5500
 $Comp
 L receiver:5103309-1 J2
 U 1 1 61C66F09
-P 7400 4650
-F 0 "J2" H 7258 5115 50  0000 C CNN
-F 1 "5103309-1" H 7258 5024 50  0000 C CNN
-F 2 "receiver:5103309-1" H 7400 4650 50  0001 C CNN
-F 3 "" H 7400 4650 50  0001 C CNN
-	1    7400 4650
+P 6350 7150
+F 0 "J2" H 6208 7615 50  0000 C CNN
+F 1 "5103309-1" H 6208 7524 50  0000 C CNN
+F 2 "receiver:5103309-1" H 6350 7150 50  0001 C CNN
+F 3 "" H 6350 7150 50  0001 C CNN
+	1    6350 7150
+	-1   0    0    1   
+$EndComp
+Wire Wire Line
+	6350 6650 5650 6650
+Wire Wire Line
+	6350 7350 5650 7350
+NoConn ~ 5650 7350
+NoConn ~ 5650 6650
+$Comp
+L power:GND #PWR0122
+U 1 1 61C41513
+P 5000 6700
+F 0 "#PWR0122" H 5000 6450 50  0001 C CNN
+F 1 "GND" H 5005 6527 50  0000 C CNN
+F 2 "" H 5000 6700 50  0001 C CNN
+F 3 "" H 5000 6700 50  0001 C CNN
+	1    5000 6700
 	1    0    0    -1  
 $EndComp
+Wire Wire Line
+	5500 7250 5500 7400
+Wire Wire Line
+	5500 7250 6350 7250
+Wire Wire Line
+	5500 7150 5500 7250
+Wire Wire Line
+	5500 7150 6350 7150
+Connection ~ 5500 7250
+Text Label 5800 7050 0    50   ~ 0
+TCK_C2D
+Text Label 5800 6950 0    50   ~ 0
+TMS_C2CK
+Text Label 5800 6850 0    50   ~ 0
+TDO_C2D
+Text Label 5800 6750 0    50   ~ 0
+TDI_C2CK
+$Comp
+L receiver:RES_0603 R10
+U 1 1 61C48C4A
+P 4500 5450
+F 0 "R10" V 4766 5397 50  0000 R CNN
+F 1 "RES_0603" V 4675 5397 50  0000 R CNN
+F 2 "receiver:0603" H 4500 5450 50  0001 C CNN
+F 3 "" H 4500 5450 50  0001 C CNN
+F 4 "10K" V 4584 5397 50  0000 R CNN "Resistance"
+	1    4500 5450
+	0    -1   -1   0   
+$EndComp
+$Comp
+L power:+3.3V #PWR0123
+U 1 1 61C4988A
+P 4500 5050
+F 0 "#PWR0123" H 4500 4900 50  0001 C CNN
+F 1 "+3.3V" H 4515 5223 50  0000 C CNN
+F 2 "" H 4500 5050 50  0001 C CNN
+F 3 "" H 4500 5050 50  0001 C CNN
+	1    4500 5050
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	4500 5100 4500 5050
+Wire Wire Line
+	3500 6000 4500 6000
+Wire Wire Line
+	4500 6000 4500 5450
+Wire Wire Line
+	4400 6100 3500 6100
+NoConn ~ 3500 6500
+NoConn ~ 3500 6600
+NoConn ~ 3500 6700
+$Comp
+L receiver:TestPoints T31
+U 1 1 61C610AB
+P 5500 6450
+F 0 "T31" H 5800 6450 50  0000 C CNN
+F 1 "TestPoints" H 5400 6200 50  0001 C CNN
+F 2 "receiver:TestPoint" H 5500 6450 50  0001 C CNN
+F 3 "" H 5500 6450 50  0001 C CNN
+	1    5500 6450
+	-1   0    0    1   
+$EndComp
+Wire Wire Line
+	5000 6550 6350 6550
+Wire Wire Line
+	5500 6450 6350 6450
+$Comp
+L power:GND #PWR0124
+U 1 1 61C78030
+P 5500 7400
+F 0 "#PWR0124" H 5500 7150 50  0001 C CNN
+F 1 "GND" H 5505 7227 50  0000 C CNN
+F 2 "" H 5500 7400 50  0001 C CNN
+F 3 "" H 5500 7400 50  0001 C CNN
+	1    5500 7400
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	6350 6750 5650 6750
+Wire Wire Line
+	6350 7050 5650 7050
+Wire Wire Line
+	5000 6700 5000 6550
+Text Label 5800 6450 0    50   ~ 0
+USB_PWR
+Text Label 3800 6000 0    50   ~ 0
+TDI_C2CK
+Text Label 3800 6100 0    50   ~ 0
+TCK_C2D
+$Comp
+L receiver:TestPoints T17
+U 1 1 61CA20E7
+P 2500 6700
+F 0 "T17" H 2800 6700 50  0000 C CNN
+F 1 "TestPoints" H 2400 6450 50  0001 C CNN
+F 2 "receiver:TestPoint" H 2500 6700 50  0001 C CNN
+F 3 "" H 2500 6700 50  0001 C CNN
+	1    2500 6700
+	-1   0    0    1   
+$EndComp
+$Comp
+L receiver:TestPoints T16
+U 1 1 61CA2C00
+P 2500 6600
+F 0 "T16" H 2800 6600 50  0000 C CNN
+F 1 "TestPoints" H 2400 6350 50  0001 C CNN
+F 2 "receiver:TestPoint" H 2500 6600 50  0001 C CNN
+F 3 "" H 2500 6600 50  0001 C CNN
+	1    2500 6600
+	-1   0    0    1   
+$EndComp
+$Comp
+L receiver:TestPoints T15
+U 1 1 61CA2DE1
+P 2500 6500
+F 0 "T15" H 2800 6500 50  0000 C CNN
+F 1 "TestPoints" H 2400 6250 50  0001 C CNN
+F 2 "receiver:TestPoint" H 2500 6500 50  0001 C CNN
+F 3 "" H 2500 6500 50  0001 C CNN
+	1    2500 6500
+	-1   0    0    1   
+$EndComp
+$Comp
+L receiver:TestPoints T14
+U 1 1 61CA2F76
+P 2500 6400
+F 0 "T14" H 2800 6400 50  0000 C CNN
+F 1 "TestPoints" H 2400 6150 50  0001 C CNN
+F 2 "receiver:TestPoint" H 2500 6400 50  0001 C CNN
+F 3 "" H 2500 6400 50  0001 C CNN
+	1    2500 6400
+	-1   0    0    1   
+$EndComp
+$Comp
+L receiver:TestPoints T13
+U 1 1 61CA31C9
+P 2500 6300
+F 0 "T13" H 2800 6300 50  0000 C CNN
+F 1 "TestPoints" H 2400 6050 50  0001 C CNN
+F 2 "receiver:TestPoint" H 2500 6300 50  0001 C CNN
+F 3 "" H 2500 6300 50  0001 C CNN
+	1    2500 6300
+	-1   0    0    1   
+$EndComp
+$Comp
+L receiver:TestPoints T12
+U 1 1 61CA33F6
+P 2500 6200
+F 0 "T12" H 2800 6200 50  0000 C CNN
+F 1 "TestPoints" H 2400 5950 50  0001 C CNN
+F 2 "receiver:TestPoint" H 2500 6200 50  0001 C CNN
+F 3 "" H 2500 6200 50  0001 C CNN
+	1    2500 6200
+	-1   0    0    1   
+$EndComp
+$Comp
+L receiver:TestPoints T11
+U 1 1 61CA365C
+P 2500 6100
+F 0 "T11" H 2800 6100 50  0000 C CNN
+F 1 "TestPoints" H 2400 5850 50  0001 C CNN
+F 2 "receiver:TestPoint" H 2500 6100 50  0001 C CNN
+F 3 "" H 2500 6100 50  0001 C CNN
+	1    2500 6100
+	-1   0    0    1   
+$EndComp
+$Comp
+L receiver:TestPoints T10
+U 1 1 61CA383D
+P 2500 6000
+F 0 "T10" H 2800 6000 50  0000 C CNN
+F 1 "TestPoints" H 2400 5750 50  0001 C CNN
+F 2 "receiver:TestPoint" H 2500 6000 50  0001 C CNN
+F 3 "" H 2500 6000 50  0001 C CNN
+	1    2500 6000
+	-1   0    0    1   
+$EndComp
+$Comp
+L receiver:TestPoints T07
+U 1 1 61CA3A1E
+P 1750 5800
+F 0 "T07" H 2050 5800 50  0000 C CNN
+F 1 "TestPoints" H 1650 5550 50  0001 C CNN
+F 2 "receiver:TestPoint" H 1750 5800 50  0001 C CNN
+F 3 "" H 1750 5800 50  0001 C CNN
+	1    1750 5800
+	-1   0    0    1   
+$EndComp
+$Comp
+L receiver:TestPoints T06
+U 1 1 61CA3D55
+P 2500 5700
+F 0 "T06" H 2800 5700 50  0000 C CNN
+F 1 "TestPoints" H 2400 5450 50  0001 C CNN
+F 2 "receiver:TestPoint" H 2500 5700 50  0001 C CNN
+F 3 "" H 2500 5700 50  0001 C CNN
+	1    2500 5700
+	-1   0    0    1   
+$EndComp
+$Comp
+L receiver:TestPoints T05
+U 1 1 61CA3EC4
+P 1750 5600
+F 0 "T05" H 2050 5600 50  0000 C CNN
+F 1 "TestPoints" H 1650 5350 50  0001 C CNN
+F 2 "receiver:TestPoint" H 1750 5600 50  0001 C CNN
+F 3 "" H 1750 5600 50  0001 C CNN
+	1    1750 5600
+	-1   0    0    1   
+$EndComp
+$Comp
+L receiver:TestPoints T03
+U 1 1 61CA406C
+P 2500 5400
+F 0 "T03" H 2800 5400 50  0000 C CNN
+F 1 "TestPoints" H 2400 5150 50  0001 C CNN
+F 2 "receiver:TestPoint" H 2500 5400 50  0001 C CNN
+F 3 "" H 2500 5400 50  0001 C CNN
+	1    2500 5400
+	-1   0    0    1   
+$EndComp
+$Comp
+L receiver:TestPoints T02
+U 1 1 61CA4629
+P 2500 5300
+F 0 "T02" H 2800 5300 50  0000 C CNN
+F 1 "TestPoints" H 2400 5050 50  0001 C CNN
+F 2 "receiver:TestPoint" H 2500 5300 50  0001 C CNN
+F 3 "" H 2500 5300 50  0001 C CNN
+	1    2500 5300
+	-1   0    0    1   
+$EndComp
+$Comp
+L receiver:TestPoints T01
+U 1 1 61CA4785
+P 2500 5200
+F 0 "T01" H 2800 5200 50  0000 C CNN
+F 1 "TestPoints" H 2400 4950 50  0001 C CNN
+F 2 "receiver:TestPoint" H 2500 5200 50  0001 C CNN
+F 3 "" H 2500 5200 50  0001 C CNN
+	1    2500 5200
+	-1   0    0    1   
+$EndComp
+$Comp
+L receiver:TestPoints T00
+U 1 1 61CA48F4
+P 2500 5100
+F 0 "T00" H 2800 5100 50  0000 C CNN
+F 1 "TestPoints" H 2400 4850 50  0001 C CNN
+F 2 "receiver:TestPoint" H 2500 5100 50  0001 C CNN
+F 3 "" H 2500 5100 50  0001 C CNN
+	1    2500 5100
+	-1   0    0    1   
+$EndComp
+$Comp
+L receiver:TestPoints T04
+U 1 1 61CA5031
+P 1750 5500
+F 0 "T04" H 2050 5500 50  0000 C CNN
+F 1 "TestPoints" H 1650 5250 50  0001 C CNN
+F 2 "receiver:TestPoint" H 1750 5500 50  0001 C CNN
+F 3 "" H 1750 5500 50  0001 C CNN
+	1    1750 5500
+	-1   0    0    1   
+$EndComp
+Wire Wire Line
+	2500 5700 2550 5700
+Wire Wire Line
+	2500 6000 2550 6000
+Wire Wire Line
+	2500 6100 2550 6100
+Wire Wire Line
+	2500 6200 2550 6200
+Wire Wire Line
+	2500 6300 2550 6300
+Wire Wire Line
+	2500 6400 2550 6400
+Wire Wire Line
+	2500 6500 2550 6500
+Wire Wire Line
+	2500 6600 2550 6600
+Wire Wire Line
+	2500 6700 2550 6700
+Wire Wire Line
+	2500 5400 2550 5400
+Wire Wire Line
+	2500 5300 2550 5300
+Wire Wire Line
+	2500 5200 2550 5200
+Wire Wire Line
+	2500 5100 2550 5100
+Text Label 1850 5600 0    50   ~ 0
+FT_TO_MCU
+Text Label 1850 5500 0    50   ~ 0
+MCU_TO_FT
+Text Label 8600 5600 0    50   ~ 0
+TDI_C2CK
+Wire Wire Line
+	5500 6950 6350 6950
+Wire Wire Line
+	5500 6850 6350 6850
+$Comp
+L receiver:TestPoints T33
+U 1 1 61C6210D
+P 5500 6950
+F 0 "T33" H 5800 6950 50  0000 C CNN
+F 1 "TestPoints" H 5400 6700 50  0001 C CNN
+F 2 "receiver:TestPoint" H 5500 6950 50  0001 C CNN
+F 3 "" H 5500 6950 50  0001 C CNN
+	1    5500 6950
+	-1   0    0    1   
+$EndComp
+$Comp
+L receiver:TestPoints T32
+U 1 1 61C61ADE
+P 5500 6850
+F 0 "T32" H 5800 6850 50  0000 C CNN
+F 1 "TestPoints" H 5400 6600 50  0001 C CNN
+F 2 "receiver:TestPoint" H 5500 6850 50  0001 C CNN
+F 3 "" H 5500 6850 50  0001 C CNN
+	1    5500 6850
+	-1   0    0    1   
+$EndComp
+Text Label 8600 5800 0    50   ~ 0
+TCK_C2D
+$Comp
+L power:+3.3V #PWR0125
+U 1 1 61CE0F63
+P 8650 5300
+F 0 "#PWR0125" H 8650 5150 50  0001 C CNN
+F 1 "+3.3V" H 8665 5473 50  0000 C CNN
+F 2 "" H 8650 5300 50  0001 C CNN
+F 3 "" H 8650 5300 50  0001 C CNN
+	1    8650 5300
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:GND #PWR0126
+U 1 1 61CE1301
+P 9050 6050
+F 0 "#PWR0126" H 9050 5800 50  0001 C CNN
+F 1 "GND" H 9055 5877 50  0000 C CNN
+F 2 "" H 9050 6050 50  0001 C CNN
+F 3 "" H 9050 6050 50  0001 C CNN
+	1    9050 6050
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:+5V #PWR0127
+U 1 1 61CE16BF
+P 8900 5000
+F 0 "#PWR0127" H 8900 4850 50  0001 C CNN
+F 1 "+5V" H 8915 5173 50  0000 C CNN
+F 2 "" H 8900 5000 50  0001 C CNN
+F 3 "" H 8900 5000 50  0001 C CNN
+	1    8900 5000
+	1    0    0    -1  
+$EndComp
+$Comp
+L receiver:TestPoints T49
+U 1 1 61CEB7E0
+P 9150 6000
+F 0 "T49" H 9450 6000 50  0000 C CNN
+F 1 "TestPoints" H 9050 5750 50  0001 C CNN
+F 2 "receiver:TestPoint" H 9150 6000 50  0001 C CNN
+F 3 "" H 9150 6000 50  0001 C CNN
+	1    9150 6000
+	1    0    0    -1  
+$EndComp
+$Comp
+L receiver:TestPoints T48
+U 1 1 61CEC88D
+P 9150 5900
+F 0 "T48" H 9450 5900 50  0000 C CNN
+F 1 "TestPoints" H 9050 5650 50  0001 C CNN
+F 2 "receiver:TestPoint" H 9150 5900 50  0001 C CNN
+F 3 "" H 9150 5900 50  0001 C CNN
+	1    9150 5900
+	1    0    0    -1  
+$EndComp
+$Comp
+L receiver:TestPoints T47
+U 1 1 61CEC9D6
+P 9150 5800
+F 0 "T47" H 9450 5800 50  0000 C CNN
+F 1 "TestPoints" H 9050 5550 50  0001 C CNN
+F 2 "receiver:TestPoint" H 9150 5800 50  0001 C CNN
+F 3 "" H 9150 5800 50  0001 C CNN
+	1    9150 5800
+	1    0    0    -1  
+$EndComp
+$Comp
+L receiver:TestPoints T46
+U 1 1 61CECBDD
+P 9150 5700
+F 0 "T46" H 9450 5700 50  0000 C CNN
+F 1 "TestPoints" H 9050 5450 50  0001 C CNN
+F 2 "receiver:TestPoint" H 9150 5700 50  0001 C CNN
+F 3 "" H 9150 5700 50  0001 C CNN
+	1    9150 5700
+	1    0    0    -1  
+$EndComp
+$Comp
+L receiver:TestPoints T45
+U 1 1 61CECEB5
+P 9150 5600
+F 0 "T45" H 9450 5600 50  0000 C CNN
+F 1 "TestPoints" H 9050 5350 50  0001 C CNN
+F 2 "receiver:TestPoint" H 9150 5600 50  0001 C CNN
+F 3 "" H 9150 5600 50  0001 C CNN
+	1    9150 5600
+	1    0    0    -1  
+$EndComp
+$Comp
+L receiver:TestPoints T43
+U 1 1 61CED381
+P 9150 5400
+F 0 "T43" H 9450 5400 50  0000 C CNN
+F 1 "TestPoints" H 9050 5150 50  0001 C CNN
+F 2 "receiver:TestPoint" H 9150 5400 50  0001 C CNN
+F 3 "" H 9150 5400 50  0001 C CNN
+	1    9150 5400
+	1    0    0    -1  
+$EndComp
+$Comp
+L receiver:TestPoints T42
+U 1 1 61CED588
+P 9150 5300
+F 0 "T42" H 9450 5300 50  0000 C CNN
+F 1 "TestPoints" H 9050 5050 50  0001 C CNN
+F 2 "receiver:TestPoint" H 9150 5300 50  0001 C CNN
+F 3 "" H 9150 5300 50  0001 C CNN
+	1    9150 5300
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	9150 6000 9050 6000
+Wire Wire Line
+	9050 6000 9050 6050
+Wire Wire Line
+	9150 5900 9050 5900
+Wire Wire Line
+	9050 5900 9050 6000
+Connection ~ 9050 6000
+Wire Wire Line
+	9150 5800 9050 5800
+Wire Wire Line
+	9150 5700 9050 5700
+Wire Wire Line
+	9050 5700 9050 5800
+Connection ~ 9050 5800
+Wire Wire Line
+	9050 5800 8600 5800
+Wire Wire Line
+	9150 5600 9050 5600
+$Comp
+L receiver:TestPoints T44
+U 1 1 61CED11B
+P 9150 5500
+F 0 "T44" H 9450 5500 50  0000 C CNN
+F 1 "TestPoints" H 9050 5250 50  0001 C CNN
+F 2 "receiver:TestPoint" H 9150 5500 50  0001 C CNN
+F 3 "" H 9150 5500 50  0001 C CNN
+	1    9150 5500
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	9150 5500 9050 5500
+Wire Wire Line
+	9050 5500 9050 5600
+Connection ~ 9050 5600
+Wire Wire Line
+	9050 5600 8600 5600
+Wire Wire Line
+	9150 5400 9050 5400
+Wire Wire Line
+	8650 5400 8650 5300
+Wire Wire Line
+	9150 5300 9050 5300
+Wire Wire Line
+	9050 5300 9050 5400
+Connection ~ 9050 5400
+Wire Wire Line
+	9050 5400 8650 5400
+$Comp
+L receiver:TestPoints T41
+U 1 1 61D11F0E
+P 9150 5200
+F 0 "T41" H 9450 5200 50  0000 C CNN
+F 1 "TestPoints" H 9050 4950 50  0001 C CNN
+F 2 "receiver:TestPoint" H 9150 5200 50  0001 C CNN
+F 3 "" H 9150 5200 50  0001 C CNN
+	1    9150 5200
+	1    0    0    -1  
+$EndComp
+$Comp
+L receiver:TestPoints T40
+U 1 1 61D122CA
+P 9150 5100
+F 0 "T40" H 9450 5100 50  0000 C CNN
+F 1 "TestPoints" H 9050 4850 50  0001 C CNN
+F 2 "receiver:TestPoint" H 9150 5100 50  0001 C CNN
+F 3 "" H 9150 5100 50  0001 C CNN
+	1    9150 5100
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	9150 5200 9050 5200
+Wire Wire Line
+	8900 5200 8900 5000
+Wire Wire Line
+	9150 5100 9050 5100
+Wire Wire Line
+	9050 5100 9050 5200
+Connection ~ 9050 5200
+Wire Wire Line
+	9050 5200 8900 5200
+$Comp
+L receiver:TestPoints T21
+U 1 1 61D28FC5
+P 3550 6200
+F 0 "T21" H 3850 6200 50  0000 C CNN
+F 1 "TestPoints" H 3450 5950 50  0001 C CNN
+F 2 "receiver:TestPoint" H 3550 6200 50  0001 C CNN
+F 3 "" H 3550 6200 50  0001 C CNN
+	1    3550 6200
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	3550 6200 3500 6200
+Text Label 1850 5800 0    50   ~ 0
+RX
+Wire Wire Line
+	1750 5500 2550 5500
+Wire Wire Line
+	1750 5600 2550 5600
+Wire Wire Line
+	1750 5800 2550 5800
+$Comp
+L receiver:2212S-04SG-85 J3
+U 1 1 61D4954F
+P 9200 3950
+F 0 "J3" H 8772 3654 50  0000 R CNN
+F 1 "2212S-04SG-85" H 8772 3745 50  0000 R CNN
+F 2 "receiver:2212S-04SG-85" H 9200 3950 50  0001 C CNN
+F 3 "" H 9200 3950 50  0001 C CNN
+	1    9200 3950
+	-1   0    0    1   
+$EndComp
+$Comp
+L receiver:TestPoints T50
+U 1 1 61D4A5E1
+P 9050 3400
+F 0 "T50" V 9300 3400 50  0000 C CNN
+F 1 "TestPoints" H 8950 3150 50  0001 C CNN
+F 2 "receiver:TestPoint" H 9050 3400 50  0001 C CNN
+F 3 "" H 9050 3400 50  0001 C CNN
+	1    9050 3400
+	0    -1   -1   0   
+$EndComp
+$Comp
+L receiver:RES_0603 R9
+U 1 1 61D4B4CD
+P 8500 3450
+F 0 "R9" V 8766 3397 50  0000 R CNN
+F 1 "RES_0603" V 8675 3397 50  0000 R CNN
+F 2 "receiver:0603" H 8500 3450 50  0001 C CNN
+F 3 "" H 8500 3450 50  0001 C CNN
+F 4 "0R" V 8584 3397 50  0000 R CNN "Resistance"
+	1    8500 3450
+	0    -1   -1   0   
+$EndComp
+$Comp
+L receiver:RES_0603 R8
+U 1 1 61D4C852
+P 8000 3450
+F 0 "R8" V 8266 3397 50  0000 R CNN
+F 1 "RES_0603" V 8175 3397 50  0000 R CNN
+F 2 "receiver:0603" H 8000 3450 50  0001 C CNN
+F 3 "" H 8000 3450 50  0001 C CNN
+F 4 "0R" V 8084 3397 50  0000 R CNN "Resistance"
+	1    8000 3450
+	0    -1   -1   0   
+$EndComp
+Wire Wire Line
+	9200 3550 9050 3550
+Wire Wire Line
+	8000 3550 8000 3450
+Wire Wire Line
+	8500 3450 8500 3550
+Connection ~ 8500 3550
+Wire Wire Line
+	8500 3550 8000 3550
+Wire Wire Line
+	9050 3400 9050 3550
+Connection ~ 9050 3550
+Wire Wire Line
+	9050 3550 8500 3550
+$Comp
+L power:+5V #PWR0128
+U 1 1 61D5B4B0
+P 8000 3050
+F 0 "#PWR0128" H 8000 2900 50  0001 C CNN
+F 1 "+5V" H 8015 3223 50  0000 C CNN
+F 2 "" H 8000 3050 50  0001 C CNN
+F 3 "" H 8000 3050 50  0001 C CNN
+	1    8000 3050
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:+3.3V #PWR0129
+U 1 1 61D5C221
+P 8500 3050
+F 0 "#PWR0129" H 8500 2900 50  0001 C CNN
+F 1 "+3.3V" H 8515 3223 50  0000 C CNN
+F 2 "" H 8500 3050 50  0001 C CNN
+F 3 "" H 8500 3050 50  0001 C CNN
+	1    8500 3050
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	8500 3100 8500 3050
+Wire Wire Line
+	8000 3100 8000 3050
+$Comp
+L power:GND #PWR0130
+U 1 1 61D67372
+P 9050 3950
+F 0 "#PWR0130" H 9050 3700 50  0001 C CNN
+F 1 "GND" H 9055 3777 50  0000 C CNN
+F 2 "" H 9050 3950 50  0001 C CNN
+F 3 "" H 9050 3950 50  0001 C CNN
+	1    9050 3950
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	9200 3850 9050 3850
+Wire Wire Line
+	9050 3850 9050 3950
+Wire Wire Line
+	9200 3650 9050 3650
+Wire Wire Line
+	9050 3650 9050 3750
+Wire Wire Line
+	9050 3750 9200 3750
+Text Label 8850 3750 0    50   ~ 0
+RX
+Wire Wire Line
+	9050 3750 8850 3750
+Connection ~ 9050 3750
 $EndSCHEMATC
