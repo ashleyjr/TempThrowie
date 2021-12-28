@@ -8,7 +8,7 @@ import os
 class DiscreteSim:
 
     def __init__(   self,
-                    timestep_s = 1e-6):
+                    timestep_s = 1e-5):
         self.__time_s = 0
         self.timestep_s = timestep_s
 
@@ -18,7 +18,7 @@ class DiscreteSim:
 class SquareWave(DiscreteSim):
 
     def __init__(   self,
-                    timestep_s  = 1e-6,
+                    timestep_s  = 1e-5,
                     freq_hz     = 1e3,
                     phase_deg   = 45):
         DiscreteSim.__init__(self, timestep_s)
@@ -38,7 +38,7 @@ class SquareWave(DiscreteSim):
 
 class PhaseDet(DiscreteSim):
     def __init__(   self,
-                    timestep_s  = 1e-6):
+                    timestep_s  = 1e-5):
         DiscreteSim.__init__(self, timestep_s)
         self.ref_0 = 0
         self.ref_1 = 0
@@ -74,8 +74,8 @@ class PhaseDet(DiscreteSim):
 
 class Lf(DiscreteSim):
     def __init__(   self,
-                    timestep_s  = 1e-6,
-                    f           = 50):
+                    timestep_s  = 1e-5,
+                    f           = 20):
         DiscreteSim.__init__(self, timestep_s)
         self.x = 0
         self.y_0 = 0
@@ -92,20 +92,22 @@ class Lf(DiscreteSim):
 
     def tick(self):
         DiscreteSim.tick(self)
-        self.y_1  = self.y_0
         self.y_0  = self.alpha * self.x
         self.y_0 += self.beta * self.y_1
+        self.y_1  = self.y_0
 
 class Pid(DiscreteSim):
     def __init__(   self,
-                    timestep_s  = 1e-6,
-                    p           = 11000,
+                    timestep_s  = 1e-5,
+                    p           = 4000,
                     i           = 3):
         DiscreteSim.__init__(self, timestep_s)
         self.p = p
         self.i = i
         self.x = 0
         self.y = 0
+        self.x_0 = 0
+        self.x_1 = 0
         self.integral = 0
 
     def setInput(self, x):
@@ -116,14 +118,14 @@ class Pid(DiscreteSim):
 
     def tick(self):
         DiscreteSim.tick(self)
-        self.x_1 = self.x_0
         self.integral += ((self.x_0 + self.x_1) / 2)
         self.y  = self.x_0 * self.p
         self.y += self.integral * self.i
+        self.x_1 = self.x_0
 
 class Vco(SquareWave):
     def __init__(   self,
-                    timestep_s  = 1e-6,
+                    timestep_s  = 1e-5,
                     min_freq_hz = 100,
                     max_freq_hz = 10000):
         SquareWave.__init__(self, timestep_s)
@@ -141,7 +143,7 @@ class Vco(SquareWave):
 
 class Div2(DiscreteSim):
     def __init__(   self,
-                    timestep_s  = 1e-6):
+                    timestep_s  = 1e-5):
         DiscreteSim.__init__(self, timestep_s)
         self.x_0 = 0
         self.x_1 = 0
@@ -164,7 +166,7 @@ class Div2(DiscreteSim):
 class Scope(DiscreteSim):
 
     def __init__(   self,
-                    timestep_s = 1e-6,
+                    timestep_s = 1e-5,
                     plotstep_s = 1e-3,
                     channels   = 1):
         DiscreteSim.__init__(self, timestep_s)
@@ -180,11 +182,11 @@ class Scope(DiscreteSim):
 
     def saveScreen(self, filename):
         sim_s = len(self.__samples[0]) * self.timestep_s
-        t = 1e3*np.arange(0, sim_s, self.timestep_s)
+        t = 1e3 * np.arange(0, sim_s, self.timestep_s)
         plt.rcParams.update({'font.size': 5})
         for c in range(self.__channels):
             plt.subplot(self.__channels, 1, c+1)
-            plt.plot(t, self.__samples[c])
+            plt.plot(t[0:len(self.__samples[c])], self.__samples[c])
             plt.xlim(0,t[-1])
             plt.xticks([])
         plt.xticks(np.arange(0, sim_s*1e3, self.plotstep_s*1e3), rotation=45)
@@ -203,6 +205,7 @@ def main(argv):
     dir_path = os.path.dirname(os.path.realpath(__file__))
     so = os.path.join(dir_path, "receiver_pll.so")
     impl = ctypes.CDLL(so)
+    impl.receiver_pll_init()
 
     wave    = SquareWave(phase_deg=66)
     vco     = Vco()
@@ -210,22 +213,28 @@ def main(argv):
     pid     = Pid()
     lf      = Lf()
     div     = Div2()
-    scope   = Scope(channels=6)
-    for i in range(30000):
+    scope   = Scope(channels=7)
+    error   = 0
+    for i in range(4000):
 
         pd.setRef(      wave.getOutput())
-        pd.setVco(      div.getOutput())
+        pd.setVco(      vco.getOutput())
         lf.setInput(    pd.getOutput())
         pid.setInput(   lf.getOutput())
         vco.control(    pid.getOutput())
         div.setInput(   vco.getOutput())
+
+        output = impl.receiver_pll(wave.getOutput())
+        error += abs(output - vco.getOutput())
 
         scope.measure(wave.getOutput(),     0)
         scope.measure(pd.getOutput(),       1)
         scope.measure(lf.getOutput(),       2)
         scope.measure(pid.getOutput(),      3)
         scope.measure(vco.getOutput(),      4)
-        scope.measure(impl.receiver_pll(i), 5)
+
+        scope.measure(output,   5)
+        scope.measure(error,    6)
 
         lf.tick()
         div.tick()

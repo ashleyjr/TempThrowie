@@ -26,7 +26,7 @@ volatile U8 sample;
 // Prototypes
 //-----------------------------------------------------------------------------
 
-int receiver_pll(int i);
+char receiver_pll(char i);
 void uartTx(U8 tx);
 void setup(void);
 
