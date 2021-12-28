@@ -256,7 +256,8 @@ void sleep(void){
    // Setup Timers
    CKCON    = CKCON_T1M__SYSCLK;  
 	
-   // Tiemr 1: UART
+   // Timer 1 
+   //    - UART
    #ifdef DBG_UART
    TMOD     = TMOD_T1M__MODE2;
 	TCON     = TCON_TR1__RUN; 
@@ -264,12 +265,13 @@ void sleep(void){
 	TL1      = 0x96;
    #endif // DBG_UART
 
-   // Timer 2: Counter 10KHz
-	TMR2CN   = TMR2CN_TR2__RUN;
+   // Timer 2
+	//    - Frequency 1KHz
+   TMR2CN   = TMR2CN_TR2__RUN;
    TMR2L    = 0x00;
-   TMR2H    = 0xFD;
+   TMR2H    = 0xFC;
    TMR2RLL  = 0x00;
-   TMR2RLH  = 0xFD;
+   TMR2RLH  = 0xFC;
    
    // Interrupts
    IE = IE_ET2__ENABLED;
