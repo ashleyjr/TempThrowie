@@ -2,6 +2,8 @@ import sys
 import math
 import numpy as np
 import matplotlib.pyplot as plt
+import ctypes
+import os
 
 class DiscreteSim:
 
@@ -196,25 +198,35 @@ class Scope(DiscreteSim):
             self.__samples[c].append(self.__sample[c])
 
 def main(argv):
-    wave = SquareWave(phase_deg=66)
-    vco = Vco()
-    pd = PhaseDet()
-    pid = Pid()
-    lf = Lf()
-    div = Div2()
-    scope = Scope(channels=5)
+
+    # Load C implementation
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    so = os.path.join(dir_path, "receiver_pll.so")
+    impl = ctypes.CDLL(so)
+
+    wave    = SquareWave(phase_deg=66)
+    vco     = Vco()
+    pd      = PhaseDet()
+    pid     = Pid()
+    lf      = Lf()
+    div     = Div2()
+    scope   = Scope(channels=6)
     for i in range(30000):
-        pd.setRef(wave.getOutput())
-        pd.setVco(div.getOutput())
-        lf.setInput(pd.getOutput())
-        pid.setInput(lf.getOutput())
-        vco.control(pid.getOutput())
-        div.setInput(vco.getOutput())
-        scope.measure(wave.getOutput(),0)
-        scope.measure(pd.getOutput(),1)
-        scope.measure(lf.getOutput(),2)
-        scope.measure(pid.getOutput(),3)
-        scope.measure(vco.getOutput(),4)
+
+        pd.setRef(      wave.getOutput())
+        pd.setVco(      div.getOutput())
+        lf.setInput(    pd.getOutput())
+        pid.setInput(   lf.getOutput())
+        vco.control(    pid.getOutput())
+        div.setInput(   vco.getOutput())
+
+        scope.measure(wave.getOutput(),     0)
+        scope.measure(pd.getOutput(),       1)
+        scope.measure(lf.getOutput(),       2)
+        scope.measure(pid.getOutput(),      3)
+        scope.measure(vco.getOutput(),      4)
+        scope.measure(impl.receiver_pll(i), 5)
+
         lf.tick()
         div.tick()
         pd.tick()
@@ -222,6 +234,7 @@ def main(argv):
         wave.tick()
         pid.tick()
         vco.tick()
+
     scope.saveScreen("graph.png")
 
 if "__main__" == __name__:
