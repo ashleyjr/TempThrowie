@@ -1,5 +1,6 @@
 all:
-	sdcc  src/main.c -I inc/ --iram-size 256 --xram-size 256 	
+	sdcc  -c ../../../modelling/receiver_pll/receiver_pll.c 	
+	sdcc  src/main.c receiver_pll.rel -I inc/ -I ../../../modelling/receiver_pll.c --iram-size 256 --xram-size 256 	
 
 clean:
 	rm -f *.o
