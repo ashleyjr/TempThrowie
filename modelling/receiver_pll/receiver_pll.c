@@ -1,5 +1,6 @@
 #define TIMESTEP_S   1e-4
 #define SCALE        1e6 
+#define TIMESTEP     TIMESTEP_S * SCALE
 #define CUT_OFF_HZ   10
 #define RC           (1 / (2 * 3.1415 * CUT_OFF_HZ))
 #define ALPHA        (float)(TIMESTEP_S / (RC + TIMESTEP_S))
@@ -9,7 +10,7 @@
 #define PID_P        5000
 #define PID_I        50
 
-static float cycle;
+static int cycle;
 
 static char p1_ref;
 static char p1_vco;
@@ -41,15 +42,15 @@ void receiver_pll_init(void) {
 
 int receiver_pll(char p0_ref) {
    char  p0_vco;
-   float period_s; 
+   int period_s; 
 
    // Update the VCO first 
-   period_s = (1/(1+pid_y)); 
-   cycle += TIMESTEP_S;
+   period_s = (SCALE/(1+pid_y)); 
+   cycle += TIMESTEP;
    if(cycle > period_s){
       cycle = 0;
    }
-   if(cycle > (period_s/2)){
+   if(cycle > (period_s >> 1)){
       p0_vco = 1;
    }else{
       p0_vco = 0;
