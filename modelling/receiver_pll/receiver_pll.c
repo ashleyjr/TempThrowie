@@ -1,8 +1,11 @@
 #define TIMESTEP_S   1e-4
+#define SCALE        1e6 
 #define CUT_OFF_HZ   10
 #define RC           (1 / (2 * 3.1415 * CUT_OFF_HZ))
 #define ALPHA        (float)(TIMESTEP_S / (RC + TIMESTEP_S))
 #define BETA         (float)(1 - ALPHA)
+#define ALPHA_SCALE  (int)(ALPHA * SCALE)
+#define BETA_SCALE   (int)(BETA * SCALE) 
 #define PID_P        5000
 #define PID_I        50
 
@@ -13,8 +16,9 @@ static char p1_vco;
 static char up;
 static char dn;
 
-static float p0_lpf; 
-static float p1_lpf;
+static int p0_lpf; 
+static int p1_lpf;
+static float lpf;
 
 static float p0_pid_x; 
 static float p1_pid_x;
@@ -70,24 +74,25 @@ int receiver_pll(char p0_ref) {
 
    // Low Pass Filter 
    //    - Phase output is in [-1, 0, 1] 
-   if(up == dn){
-      // Phase = 0
-      p0_lpf = (BETA * p1_lpf);
-   }else{
+   
+   // Phase = 0
+   p0_lpf = (BETA * p1_lpf);
+   if(up != dn){
       if(up == 1){
          // Phase = 1
-         p0_lpf = ALPHA + (BETA * p1_lpf);
+         p0_lpf += ALPHA_SCALE;
       }else{
          // Phase = -1
-         p0_lpf = (BETA * p1_lpf) - ALPHA;
+         p0_lpf -= ALPHA_SCALE;
       }
-   }
+   } 
    p1_lpf = p0_lpf;
- 
+   lpf = (float)p0_lpf / (float)SCALE;
+   
    // PID Control
-   integral += ((p0_lpf + p1_pid_x) / 2); 
-   pid_y = (p0_lpf *  PID_P) + (integral * PID_I);
-   p1_pid_x = p0_lpf;
+   integral += ((lpf + p1_pid_x) / 2); 
+   pid_y = (lpf *  PID_P) + (integral * PID_I);
+   p1_pid_x = lpf;
      
    return p0_vco;
 }
