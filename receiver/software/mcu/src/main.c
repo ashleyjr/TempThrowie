@@ -50,7 +50,7 @@ INTERRUPT (TIMER2_ISR, TIMER2_IRQn){
 
    #ifdef DBG_SAMPLE
    // Start the sample 
-   //SAMPLE = 1; 
+   SAMPLE = 1; 
    #endif
 
    // Call the lock function
@@ -63,7 +63,7 @@ INTERRUPT (TIMER2_ISR, TIMER2_IRQn){
    
    #ifdef DBG_SAMPLE
    // End the sample 
-   //SAMPLE = 0; 
+   SAMPLE = 0; 
    #endif 
 } 
 
@@ -119,12 +119,12 @@ void setup(void){
 
    // Timer 2: 
    //    - Runs as fast as possible
-   //    - 
+   //    - 2KHz 
 	TMR2CN   = TMR2CN_TR2__RUN; 
-   TMR2L    = 0xD0;
-   TMR2H    = 0xFF;
-   TMR2RLL  = 0xD0;
-   TMR2RLH  = 0xFF;
+   TMR2L    = 0x00;
+   TMR2H    = 0xD0;
+   TMR2RLL  = 0x00;
+   TMR2RLH  = 0xD0;
    
    // Interrupts
    IE = IE_EA__ENABLED | 

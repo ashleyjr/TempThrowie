@@ -1,10 +1,10 @@
-#define TIMESTEP_S   1e-5
-#define CUT_OFF_HZ   20
+#define TIMESTEP_S   1e-4
+#define CUT_OFF_HZ   10
 #define RC           (1 / (2 * 3.1415 * CUT_OFF_HZ))
 #define ALPHA        (float)(TIMESTEP_S / (RC + TIMESTEP_S))
 #define BETA         (float)(1 - ALPHA)
-#define PID_P        4000
-#define PID_I        3
+#define PID_P        5000
+#define PID_I        50
 
 static float cycle;
 
@@ -37,8 +37,7 @@ void receiver_pll_init(void) {
 
 int receiver_pll(char p0_ref) {
    char  p0_vco;
-   float period_s;
-   float phase; 
+   float period_s; 
 
    // Update the VCO first 
    period_s = (1/(1+pid_y)); 
@@ -66,20 +65,23 @@ int receiver_pll(char p0_ref) {
       up = 0;
       dn = 0;
    }
-   if(up == dn){
-      phase = 0;
-   } else {
-      if(up == 1){
-         phase = 1;
-      }else{
-         phase = -1;
-      }
-   } 
    p1_ref = p0_ref;
    p1_vco = p0_vco;
 
    // Low Pass Filter 
-   p0_lpf = (ALPHA * phase) + (BETA * p1_lpf);
+   //    - Phase output is in [-1, 0, 1] 
+   if(up == dn){
+      // Phase = 0
+      p0_lpf = (BETA * p1_lpf);
+   }else{
+      if(up == 1){
+         // Phase = 1
+         p0_lpf = ALPHA + (BETA * p1_lpf);
+      }else{
+         // Phase = -1
+         p0_lpf = (BETA * p1_lpf) - ALPHA;
+      }
+   }
    p1_lpf = p0_lpf;
  
    // PID Control
