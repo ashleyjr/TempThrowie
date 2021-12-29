@@ -45,16 +45,27 @@ void main (void){
 //-----------------------------------------------------------------------------
 
 INTERRUPT (TIMER2_ISR, TIMER2_IRQn){            
+   char rtn;
+
    // Disable all interrupts
    IE = 0;   
 
    #ifdef DBG_SAMPLE
    // Start the sample 
-   SAMPLE = 1; 
+   //SAMPLE = 1; 
    #endif
 
    // Call the lock function
-   SAMPLE = receiver_pll(RX);
+   if(RX == 1){
+      rtn = receiver_pll(1);
+   }else{
+      rtn = receiver_pll(0);
+   }
+   if(rtn == 1){
+      SAMPLE = 1;
+   }else{
+      SAMPLE = 0;
+   }
 
    // Enable the interrupts
    TMR2CN &= ~TMR2CN_TF2H__SET;
@@ -63,7 +74,7 @@ INTERRUPT (TIMER2_ISR, TIMER2_IRQn){
    
    #ifdef DBG_SAMPLE
    // End the sample 
-   SAMPLE = 0; 
+   //SAMPLE = 0; 
    #endif 
 } 
 
@@ -119,12 +130,12 @@ void setup(void){
 
    // Timer 2: 
    //    - Runs as fast as possible
-   //    - 2KHz 
+   //    - 5KHz 
 	TMR2CN   = TMR2CN_TR2__RUN; 
-   TMR2L    = 0x00;
-   TMR2H    = 0xD0;
-   TMR2RLL  = 0x00;
-   TMR2RLH  = 0xD0;
+   TMR2L    = 0xCA;
+   TMR2H    = 0xEC;
+   TMR2RLL  = 0xCA;
+   TMR2RLH  = 0xEC;
    
    // Interrupts
    IE = IE_EA__ENABLED | 

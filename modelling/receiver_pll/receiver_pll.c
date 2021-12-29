@@ -1,14 +1,16 @@
-#define TIMESTEP_S   1e-4
+#define TIMESTEP_S   2e-4
 #define SCALE        1e6 
+#define SCALE_SQ     SCALE * SCALE
 #define TIMESTEP     TIMESTEP_S * SCALE
-#define CUT_OFF_HZ   10
+#define CUT_OFF_HZ   20
 #define RC           (1 / (2 * 3.1415 * CUT_OFF_HZ))
 #define ALPHA        (float)(TIMESTEP_S / (RC + TIMESTEP_S))
 #define BETA         (float)(1 - ALPHA)
 #define ALPHA_SCALE  (int)(ALPHA * SCALE)
 #define BETA_SCALE   (int)(BETA * SCALE) 
-#define PID_P        5000
-#define PID_I        50
+#define PID_P        1500
+#define PID_I        20
+#define PID_I_2      PID_I/2
 
 static int cycle;
 
@@ -19,12 +21,12 @@ static char dn;
 
 static int p0_lpf; 
 static int p1_lpf;
-static float lpf;
+static int lpf;
 
-static float p0_pid_x; 
-static float p1_pid_x;
-static float integral;
-static float pid_y;
+static int p0_pid_x; 
+static int p1_pid_x;
+static int integral;
+static int pid_y;
 
 void receiver_pll_init(void) { 
    cycle    = 0;       
@@ -40,12 +42,12 @@ void receiver_pll_init(void) {
    pid_y    = 0;    
 }
 
-int receiver_pll(char p0_ref) {
+char receiver_pll(char p0_ref) {
    char  p0_vco;
    int period_s; 
 
    // Update the VCO first 
-   period_s = (SCALE/(1+pid_y)); 
+   period_s = ((SCALE_SQ)/(SCALE+pid_y)); 
    cycle += TIMESTEP;
    if(cycle > period_s){
       cycle = 0;
@@ -74,7 +76,8 @@ int receiver_pll(char p0_ref) {
    p1_vco = p0_vco;
 
    // Low Pass Filter 
-   //    - Phase output is in [-1, 0, 1] 
+   //    - Phase output is in [-1, 0, 1]
+   //      so simplfy out multiply
    
    // Phase = 0
    p0_lpf = (BETA * p1_lpf);
@@ -88,12 +91,14 @@ int receiver_pll(char p0_ref) {
       }
    } 
    p1_lpf = p0_lpf;
-   lpf = (float)p0_lpf / (float)SCALE;
    
    // PID Control
-   integral += ((lpf + p1_pid_x) / 2); 
-   pid_y = (lpf *  PID_P) + (integral * PID_I);
-   p1_pid_x = lpf;
+   integral += ((p0_lpf + p1_pid_x) >> 1); 
+   
+   pid_y  = (p0_lpf   * PID_P); 
+   pid_y += (integral * PID_I);
+   
+   p1_pid_x = p0_lpf;
      
    return p0_vco;
 }
