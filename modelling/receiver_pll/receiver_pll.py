@@ -8,7 +8,7 @@ import os
 class DiscreteSim:
 
     def __init__(   self,
-                    timestep_s = 2e-4):
+                    timestep_s = 1e-4):
         self.__time_s = 0
         self.timestep_s = timestep_s
 
@@ -18,7 +18,7 @@ class DiscreteSim:
 class SquareWave(DiscreteSim):
 
     def __init__(   self,
-                    timestep_s  = 2e-4,
+                    timestep_s  = 1e-4,
                     freq_hz     = 1e3,
                     phase_deg   = 45):
         DiscreteSim.__init__(self, timestep_s)
@@ -38,7 +38,7 @@ class SquareWave(DiscreteSim):
 
 class PhaseDet(DiscreteSim):
     def __init__(   self,
-                    timestep_s  = 2e-4):
+                    timestep_s  = 1e-4):
         DiscreteSim.__init__(self, timestep_s)
         self.ref_0 = 0
         self.ref_1 = 0
@@ -74,7 +74,7 @@ class PhaseDet(DiscreteSim):
 
 class Lf(DiscreteSim):
     def __init__(   self,
-                    timestep_s  = 2e-4,
+                    timestep_s  = 1e-4,
                     f           = 20):
         DiscreteSim.__init__(self, timestep_s)
         self.x = 0
@@ -98,9 +98,9 @@ class Lf(DiscreteSim):
 
 class Pid(DiscreteSim):
     def __init__(   self,
-                    timestep_s  = 2e-4,
-                    p           = 1500,
-                    i           = 20):
+                    timestep_s  = 1e-4,
+                    p           = 1600,
+                    i           = 21):
         DiscreteSim.__init__(self, timestep_s)
         self.p = p
         self.i = i
@@ -125,7 +125,7 @@ class Pid(DiscreteSim):
 
 class Vco(SquareWave):
     def __init__(   self,
-                    timestep_s  = 2e-4,
+                    timestep_s  = 1e-4,
                     min_freq_hz = 100,
                     max_freq_hz = 10000):
         SquareWave.__init__(self, timestep_s)
@@ -135,7 +135,7 @@ class Vco(SquareWave):
         self.cycle = 0
 
     def control(self, c):
-        self.period_s = (1/(1+c))
+        self.period_s = (1/(0.00001+c))
         if self.period_s > self.__max_period_s:
             self.period_s = self.__max_period_s
         if self.period_s < self.__min_period_s:
@@ -143,7 +143,7 @@ class Vco(SquareWave):
 
 class Div2(DiscreteSim):
     def __init__(   self,
-                    timestep_s  = 2e-4):
+                    timestep_s  = 1e-4):
         DiscreteSim.__init__(self, timestep_s)
         self.x_0 = 0
         self.x_1 = 0
@@ -166,7 +166,7 @@ class Div2(DiscreteSim):
 class Scope(DiscreteSim):
 
     def __init__(   self,
-                    timestep_s = 2e-4,
+                    timestep_s = 1e-4,
                     plotstep_s = 1e-3,
                     channels   = 1):
         DiscreteSim.__init__(self, timestep_s)
@@ -215,7 +215,7 @@ def main(argv):
     div     = Div2()
     scope   = Scope(channels=7)
     error   = 0
-    for i in range(400):
+    for i in range(500):
 
         pd.setRef(      wave.getOutput())
         pd.setVco(      vco.getOutput())

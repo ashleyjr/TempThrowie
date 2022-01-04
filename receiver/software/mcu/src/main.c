@@ -12,9 +12,9 @@
 #define DBG_SAMPLE
 
 SBIT(RX,       SFR_P0,  7);  
-#ifdef DBG_SAMPLE
+//#ifdef DBG_SAMPLE
 SBIT(SAMPLE,   SFR_P1,  4);  
-#endif
+//#endif
 
 //-----------------------------------------------------------------------------
 // Global Variables
@@ -45,27 +45,16 @@ void main (void){
 //-----------------------------------------------------------------------------
 
 INTERRUPT (TIMER2_ISR, TIMER2_IRQn){            
-   char rtn;
-
    // Disable all interrupts
    IE = 0;   
 
    #ifdef DBG_SAMPLE
    // Start the sample 
-   //SAMPLE = 1; 
+   SAMPLE = 1; 
    #endif
 
-   // Call the lock function
-   if(RX == 1){
-      rtn = receiver_pll(1);
-   }else{
-      rtn = receiver_pll(0);
-   }
-   if(rtn == 1){
-      SAMPLE = 1;
-   }else{
-      SAMPLE = 0;
-   }
+   // Call the lock function 
+   SAMPLE = receiver_pll(RX);
 
    // Enable the interrupts
    TMR2CN &= ~TMR2CN_TF2H__SET;
@@ -74,7 +63,7 @@ INTERRUPT (TIMER2_ISR, TIMER2_IRQn){
    
    #ifdef DBG_SAMPLE
    // End the sample 
-   //SAMPLE = 0; 
+   SAMPLE = 0; 
    #endif 
 } 
 
@@ -130,12 +119,12 @@ void setup(void){
 
    // Timer 2: 
    //    - Runs as fast as possible
-   //    - 5KHz 
+   //    - 3.33KHz 
 	TMR2CN   = TMR2CN_TR2__RUN; 
-   TMR2L    = 0xCA;
-   TMR2H    = 0xEC;
-   TMR2RLL  = 0xCA;
-   TMR2RLH  = 0xEC;
+   TMR2L    = 0x90;
+   TMR2H    = 0xF1;
+   TMR2RLL  = 0x90;
+   TMR2RLH  = 0xF1;
    
    // Interrupts
    IE = IE_EA__ENABLED | 

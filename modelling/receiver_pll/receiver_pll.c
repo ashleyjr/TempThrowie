@@ -1,4 +1,4 @@
-#define TIMESTEP_S   2e-4
+#define TIMESTEP_S   1e-4
 #define SCALE        1e6 
 #define SCALE_SQ     SCALE * SCALE
 #define TIMESTEP     TIMESTEP_S * SCALE
@@ -8,25 +8,36 @@
 #define BETA         (float)(1 - ALPHA)
 #define ALPHA_SCALE  (int)(ALPHA * SCALE)
 #define BETA_SCALE   (int)(BETA * SCALE) 
-#define PID_P        1500
-#define PID_I        20
+#define PID_P        1600
+#define PID_I        21
 #define PID_I_2      PID_I/2
 
-static int cycle;
+
+// DATA TYPES
+// -  SDCC 
+//    - short  - 16 bits
+//    - int    - 16 bits
+//    - long   - 32 bits
+// - GCC
+//    - short  - 16 bits
+//    - int    - 32 bits
+//    - long   - 32 bits
+
+static long cycle;
 
 static char p1_ref;
 static char p1_vco;
 static char up;
 static char dn;
 
-static int p0_lpf; 
-static int p1_lpf;
-static int lpf;
+static long p0_lpf; 
+static long p1_lpf;
+static long lpf;
 
-static int p0_pid_x; 
-static int p1_pid_x;
-static int integral;
-static int pid_y;
+static long p0_pid_x; 
+static long p1_pid_x;
+static long integral;
+static long pid_y;
 
 void receiver_pll_init(void) { 
    cycle    = 0;       
@@ -44,10 +55,10 @@ void receiver_pll_init(void) {
 
 char receiver_pll(char p0_ref) {
    char  p0_vco;
-   int period_s; 
+   unsigned short period_s; 
 
    // Update the VCO first 
-   period_s = ((SCALE_SQ)/(SCALE+pid_y)); 
+   period_s = ((SCALE_SQ)/pid_y); 
    cycle += TIMESTEP;
    if(cycle > period_s){
       cycle = 0;
@@ -93,10 +104,10 @@ char receiver_pll(char p0_ref) {
    p1_lpf = p0_lpf;
    
    // PID Control
-   integral += ((p0_lpf + p1_pid_x) >> 1); 
+   integral += (p0_lpf + p1_pid_x); 
    
    pid_y  = (p0_lpf   * PID_P); 
-   pid_y += (integral * PID_I);
+   pid_y += (integral * PID_I_2);
    
    p1_pid_x = p0_lpf;
      
