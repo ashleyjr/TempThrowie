@@ -5,20 +5,26 @@ import matplotlib.pyplot as plt
 import ctypes
 import os
 
+TIMESTEP_S = 1e-5
+SIM_TIME_S = 1e-2
+
 class DiscreteSim:
 
     def __init__(   self,
-                    timestep_s = 1e-4):
+                    timestep_s = TIMESTEP_S):
         self.__time_s = 0
         self.timestep_s = timestep_s
 
     def tick(self):
         self.__time_s += self.timestep_s
 
+    def getTime(self):
+        return self.__time_s
+
 class SquareWave(DiscreteSim):
 
     def __init__(   self,
-                    timestep_s  = 1e-4,
+                    timestep_s  = TIMESTEP_S,
                     freq_hz     = 1e3,
                     phase_deg   = 45):
         DiscreteSim.__init__(self, timestep_s)
@@ -38,7 +44,7 @@ class SquareWave(DiscreteSim):
 
 class PhaseDet(DiscreteSim):
     def __init__(   self,
-                    timestep_s  = 1e-4):
+                    timestep_s  = TIMESTEP_S):
         DiscreteSim.__init__(self, timestep_s)
         self.ref_0 = 0
         self.ref_1 = 0
@@ -74,7 +80,7 @@ class PhaseDet(DiscreteSim):
 
 class Lf(DiscreteSim):
     def __init__(   self,
-                    timestep_s  = 1e-4,
+                    timestep_s  = TIMESTEP_S,
                     f           = 20):
         DiscreteSim.__init__(self, timestep_s)
         self.x = 0
@@ -98,7 +104,7 @@ class Lf(DiscreteSim):
 
 class Pid(DiscreteSim):
     def __init__(   self,
-                    timestep_s  = 1e-4,
+                    timestep_s  = TIMESTEP_S,
                     p           = 1600,
                     i           = 21):
         DiscreteSim.__init__(self, timestep_s)
@@ -125,7 +131,7 @@ class Pid(DiscreteSim):
 
 class Vco(SquareWave):
     def __init__(   self,
-                    timestep_s  = 1e-4,
+                    timestep_s  = TIMESTEP_S,
                     min_freq_hz = 100,
                     max_freq_hz = 10000):
         SquareWave.__init__(self, timestep_s)
@@ -143,7 +149,7 @@ class Vco(SquareWave):
 
 class Div2(DiscreteSim):
     def __init__(   self,
-                    timestep_s  = 1e-4):
+                    timestep_s  = TIMESTEP_S):
         DiscreteSim.__init__(self, timestep_s)
         self.x_0 = 0
         self.x_1 = 0
@@ -166,7 +172,7 @@ class Div2(DiscreteSim):
 class Scope(DiscreteSim):
 
     def __init__(   self,
-                    timestep_s = 1e-4,
+                    timestep_s = TIMESTEP_S,
                     plotstep_s = 1e-3,
                     channels   = 1):
         DiscreteSim.__init__(self, timestep_s)
@@ -215,8 +221,8 @@ def main(argv):
     div     = Div2()
     scope   = Scope(channels=7)
     error   = 0
-    for i in range(500):
 
+    while wave.getTime() < SIM_TIME_S:
         pd.setRef(      wave.getOutput())
         pd.setVco(      vco.getOutput())
         lf.setInput(    pd.getOutput())
