@@ -5,8 +5,9 @@ import matplotlib.pyplot as plt
 import ctypes
 import os
 
-TIMESTEP_S = 1e-5
-SIM_TIME_S = 1e-2
+TIMESTEP_S      = 1e-5
+SIM_TIME_S      = 1e-2
+DATA_RATE_HZ    = 1e3
 
 class DiscreteSim:
 
@@ -25,13 +26,12 @@ class SquareWave(DiscreteSim):
 
     def __init__(   self,
                     timestep_s  = TIMESTEP_S,
-                    freq_hz     = 1e3,
+                    freq_hz     = DATA_RATE_HZ,
                     phase_deg   = 45):
         DiscreteSim.__init__(self, timestep_s)
 
-        self.__freq_hz    = freq_hz
-        self.period_s     = 1 / freq_hz
-        self.cycle        = (self.period_s * float(phase_deg))/float(360)
+        self.period_s = 1 / freq_hz
+        self.cycle    = (self.period_s * float(phase_deg))/float(360)
 
     def getOutput(self):
         return 1 if self.cycle > (self.period_s/2) else 0
@@ -81,7 +81,7 @@ class PhaseDet(DiscreteSim):
 class Lf(DiscreteSim):
     def __init__(   self,
                     timestep_s  = TIMESTEP_S,
-                    f           = 20):
+                    f           = 5e2):
         DiscreteSim.__init__(self, timestep_s)
         self.x = 0
         self.y_0 = 0
@@ -105,8 +105,8 @@ class Lf(DiscreteSim):
 class Pid(DiscreteSim):
     def __init__(   self,
                     timestep_s  = TIMESTEP_S,
-                    p           = 1600,
-                    i           = 21):
+                    p           = (2 ** -17),
+                    i           = 0):
         DiscreteSim.__init__(self, timestep_s)
         self.p = p
         self.i = i
@@ -129,23 +129,22 @@ class Pid(DiscreteSim):
         self.y += self.integral * self.i
         self.x_1 = self.x_0
 
-class Vco(SquareWave):
+class Pco(SquareWave):
     def __init__(   self,
                     timestep_s  = TIMESTEP_S,
-                    min_freq_hz = 100,
-                    max_freq_hz = 10000):
-        SquareWave.__init__(self, timestep_s)
-        self.__max_period_s = 1 / float(min_freq_hz)
-        self.__min_period_s = 1 / float(max_freq_hz)
-        self.period_s = self.__max_period_s
-        self.cycle = 0
+                    freq_hz     = DATA_RATE_HZ):
 
-    def control(self, c):
-        self.period_s = (1/(0.00001+c))
-        if self.period_s > self.__max_period_s:
-            self.period_s = self.__max_period_s
-        if self.period_s < self.__min_period_s:
-            self.period_s = self.__min_period_s
+        SquareWave.__init__(\
+            self,
+            timestep_s,
+            freq_hz,
+            0)
+
+        self.phase = 0
+
+    def setPhase(self, p):
+        self.cycle += p
+        self.phase = p
 
 class Div2(DiscreteSim):
     def __init__(   self,
@@ -213,8 +212,8 @@ def main(argv):
     impl = ctypes.CDLL(so)
     impl.receiver_pll_init()
 
-    wave    = SquareWave(phase_deg=66)
-    vco     = Vco()
+    wave    = SquareWave(phase_deg=137)
+    pco     = Pco()
     pd      = PhaseDet()
     pid     = Pid()
     lf      = Lf()
@@ -224,20 +223,20 @@ def main(argv):
 
     while wave.getTime() < SIM_TIME_S:
         pd.setRef(      wave.getOutput())
-        pd.setVco(      vco.getOutput())
+        pd.setVco(      pco.getOutput())
         lf.setInput(    pd.getOutput())
         pid.setInput(   lf.getOutput())
-        vco.control(    pid.getOutput())
-        div.setInput(   vco.getOutput())
+        pco.setPhase(   pid.getOutput())
+        div.setInput(   pco.getOutput())
 
         output = impl.receiver_pll(wave.getOutput())
-        error += abs(output - vco.getOutput())
+        error += abs(output - pco.getOutput())
 
         scope.measure(wave.getOutput(),     0)
         scope.measure(pd.getOutput(),       1)
         scope.measure(lf.getOutput(),       2)
         scope.measure(pid.getOutput(),      3)
-        scope.measure(vco.getOutput(),      4)
+        scope.measure(pco.getOutput(),      4)
 
         scope.measure(output,   5)
         scope.measure(error,    6)
@@ -248,7 +247,7 @@ def main(argv):
         scope.tick()
         wave.tick()
         pid.tick()
-        vco.tick()
+        pco.tick()
 
     scope.saveScreen("graph.png")
 
