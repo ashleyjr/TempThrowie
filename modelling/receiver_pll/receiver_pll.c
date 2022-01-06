@@ -1,15 +1,16 @@
-#define TIMESTEP_S   1e-5
-#define SCALE        1e7 
-#define TIMESTEP     TIMESTEP_S * SCALE
-#define CUT_OFF_HZ   500
+#define TIMESTEP_S   (float)1e-4
+#define SCALE_PWR    20
+#define SCALE        (long)((long)1 << (SCALE_PWR)) 
+#define TIMESTEP     (long)(TIMESTEP_S * SCALE)
+#define CUT_OFF_HZ   (float)20
 #define RC           (1 / (2 * 3.1415 * CUT_OFF_HZ))
 #define ALPHA        (float)(TIMESTEP_S / (RC + TIMESTEP_S))
 #define BETA         (float)(1 - ALPHA)
-#define ALPHA_SCALE  (int)(ALPHA * SCALE)
-#define BETA_SCALE   (int)(BETA * SCALE) 
+#define ALPHA_SCALE  (long)(ALPHA * SCALE)
+#define BETA_SCALE   (long)(BETA * SCALE) 
 #define TGT_HZ       1000
-#define PERIOD_S     SCALE / TGT_HZ
-#define PERIOD_S_2   PERIOD_S / 2
+#define PERIOD_S     (short)(SCALE / TGT_HZ)
+#define PERIOD_S_2   (short)(PERIOD_S / 2)
 
 // DATA TYPES
 // -  SDCC 
@@ -21,7 +22,7 @@
 //    - int    - 32 bits
 //    - long   - 32 bits
 
-static long cycle;
+static unsigned long cycle;
 
 static char p1_ref;
 static char p0_vco;
@@ -33,9 +34,6 @@ static long p0_lpf;
 static long p1_lpf;
 static long lpf;
 
-static long p0_pid_x; 
-static long p1_pid_x;
-static long integral;
 static long pid_y;
 
 void receiver_pll_init(void) { 
@@ -45,10 +43,7 @@ void receiver_pll_init(void) {
    up       = 0;
    dn       = 0;  
    p0_lpf   = 0; 
-   p1_lpf   = 0;      
-   p0_pid_x = 0; 
-   p1_pid_x = 0;
-   integral = 0;
+   p1_lpf   = 0;       
    pid_y    = 0;   
    p0_vco   = 0;
 }
@@ -90,7 +85,7 @@ char receiver_pll(char p0_ref) {
    p1_lpf = p0_lpf;
    
    // PID Control 
-   pid_y = p0_lpf >> 17;  
+   pid_y = p0_lpf >> 13;  
     
    // Update the PCO 
    cycle += pid_y;

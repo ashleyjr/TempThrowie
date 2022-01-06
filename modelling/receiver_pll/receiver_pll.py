@@ -5,8 +5,8 @@ import matplotlib.pyplot as plt
 import ctypes
 import os
 
-TIMESTEP_S      = 1e-5
-SIM_TIME_S      = 1e-2
+TIMESTEP_S      = 1e-4
+SIM_TIME_S      = 0.1
 DATA_RATE_HZ    = 1e3
 
 class DiscreteSim:
@@ -81,7 +81,7 @@ class PhaseDet(DiscreteSim):
 class Lf(DiscreteSim):
     def __init__(   self,
                     timestep_s  = TIMESTEP_S,
-                    f           = 5e2):
+                    f           = 20):
         DiscreteSim.__init__(self, timestep_s)
         self.x = 0
         self.y_0 = 0
@@ -105,7 +105,7 @@ class Lf(DiscreteSim):
 class Pid(DiscreteSim):
     def __init__(   self,
                     timestep_s  = TIMESTEP_S,
-                    p           = (2 ** -17),
+                    p           = (2 ** -13),
                     i           = 0):
         DiscreteSim.__init__(self, timestep_s)
         self.p = p
@@ -212,7 +212,7 @@ def main(argv):
     impl = ctypes.CDLL(so)
     impl.receiver_pll_init()
 
-    wave    = SquareWave(phase_deg=137)
+    wave    = SquareWave(phase_deg=77)
     pco     = Pco()
     pd      = PhaseDet()
     pid     = Pid()
