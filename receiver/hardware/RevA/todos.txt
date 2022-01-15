@@ -1,0 +1,12 @@
+TODOS
+-----
+
+A list of improvement which can be made move form RevA to RevB
+
+- FTDI chip pin pads could be wider
+- USB pin THRU pads couldbe thicker
+- Thermal relief on non-ground larger nets (VCC)
+- VCC rail to reciever module not thick enough
+   - Added extra connection
+   - Remove 0R link?
+
