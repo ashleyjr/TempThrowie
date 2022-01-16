@@ -11,6 +11,8 @@
 #define TGT_HZ       1000
 #define PERIOD_S     (short)(SCALE / TGT_HZ)
 #define PERIOD_S_2   (short)(PERIOD_S / 2)
+#define PERIOD_S_4   (short)(PERIOD_S / 4)
+#define PERIOD_S_3_4 (short)((3*PERIOD_S) / 4)
 
 // DATA TYPES
 // -  SDCC 
@@ -22,13 +24,15 @@
 //    - int    - 32 bits
 //    - long   - 32 bits
 
-static unsigned long cycle;
+static unsigned long p0_cycle;
+static unsigned long p1_cycle;
 
 static char p1_ref;
 static char p0_vco;
 static char p1_vco;
 static char up;
 static char dn;
+static char sample;
 
 static long p0_lpf; 
 static long p1_lpf;
@@ -39,7 +43,8 @@ static long integral;
 
 
 void receiver_pll_init(void) { 
-   cycle    = 0;       
+   p0_cycle = 0;  
+   p1_cycle = 0;
    p1_ref   = 0; 
    p1_vco   = 0;
    up       = 0;
@@ -93,15 +98,25 @@ char receiver_pll(char p0_ref) {
    pid_y    += (integral >> 21);
     
    // Update the PCO 
-   cycle += pid_y;
-   cycle += TIMESTEP;
-   if(cycle > PERIOD_S){
-      cycle = 0;
+   p0_cycle += pid_y;
+   p0_cycle += TIMESTEP;
+   if(p0_cycle > PERIOD_S){
+      p0_cycle = 0;
    }
-   if(cycle > PERIOD_S_2){
+   
+   if(p0_cycle > PERIOD_S_2){
       p0_vco = 1;
    }else{
       p0_vco = 0;
    }  
-   return p0_vco;
+   
+   // The sample if off 90 degs and pulse every edge
+   if(((p0_cycle > PERIOD_S_4)   && (PERIOD_S_4 > p1_cycle)) || 
+      ((p0_cycle > PERIOD_S_3_4) && (PERIOD_S_3_4 > p1_cycle))){
+      sample = 1;
+   }else{
+      sample = 0;
+   }  
+   p1_cycle = p0_cycle;
+   return sample;
 }

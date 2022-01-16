@@ -20,7 +20,13 @@ SBIT(SAMPLE,   SFR_P1,  4);
 // Global Variables
 //-----------------------------------------------------------------------------
 
-volatile U8 sample;
+volatile char           send;
+volatile U8           uart_sample;
+volatile char           uart_sample_cnt;
+volatile char           locked;
+volatile char           sample_pin;
+volatile unsigned short locked_samples;
+volatile unsigned long  sample;
 
 //-----------------------------------------------------------------------------
 // Prototypes
@@ -36,14 +42,17 @@ void setup(void);
 
 void main (void){        
    sample=0;
-   setup();
+   sample_pin;
+   locked=0;
+   locked_samples=0;
+   send=0;
+   setup(); 
    for(;;){
-   uartTx('T');
-   uartTx('e');
-   uartTx('s');
-   uartTx('t');
-   }
-   for(;;);
+      if(send){
+         uartTx('A');
+         send=0;
+      }
+   } 
 }
  
 //-----------------------------------------------------------------------------
@@ -51,6 +60,8 @@ void main (void){
 //-----------------------------------------------------------------------------
 
 INTERRUPT (TIMER2_ISR, TIMER2_IRQn){            
+   char pll;
+
    // Disable all interrupts
    IE = 0;   
 
@@ -60,7 +71,37 @@ INTERRUPT (TIMER2_ISR, TIMER2_IRQn){
    #endif
 
    // Call the lock function 
-   SAMPLE = receiver_pll(RX);
+    
+   pll=receiver_pll(RX); 
+   
+   if(pll == 0x01){    
+      sample <<= 1;
+      sample |= RX;
+         
+      if(locked == 1){  
+         locked_samples++; 
+         if(locked_samples == 500){
+            SAMPLE = 0;
+            locked = 0; 
+         }
+      }else{ 
+         if(sample == 0xAAAAAAAA){  
+            SAMPLE = 1;
+            locked = 1; 
+            uart_sample_cnt = 0;
+            locked_samples = 0;
+         }
+      }
+   } 
+
+   if(locked){
+      if(RX==1){
+         uartTx('1');
+      }else{
+         uartTx('0');
+      }
+      //send=1; 
+   }
 
    // Enable the interrupts
    TMR2CN &= ~TMR2CN_TF2H__SET;
@@ -113,7 +154,7 @@ void setup(void){
               XBR2_XBARE__ENABLED;
    
    // Setup Timers
-   CKCON    = CKCON_T1M__PRESCALE| 
+   CKCON    = CKCON_T1M__SYSCLK| 
               CKCON_T2ML__SYSCLK|
               CKCON_T2MH__SYSCLK;
 
