@@ -9,20 +9,19 @@
 // Defines
 //-----------------------------------------------------------------------------
 
-#define DBG_SAMPLE
+//#define DBG_SAMPLE
+#define SAMPLE_WINDOW 4096
+#define SAMPLE_PATTERN 0xAAAAAAAA
 
 SBIT(RX,       SFR_P0,  7);  
-//#ifdef DBG_SAMPLE
+#ifdef DBG_SAMPLE
 SBIT(SAMPLE,   SFR_P1,  4);  
-//#endif
+#endif
 
 //-----------------------------------------------------------------------------
 // Global Variables
 //-----------------------------------------------------------------------------
 
-volatile char           send;
-volatile U8           uart_sample;
-volatile char           uart_sample_cnt;
 volatile char           locked;
 volatile char           sample_pin;
 volatile unsigned short locked_samples;
@@ -42,17 +41,10 @@ void setup(void);
 
 void main (void){        
    sample=0;
-   sample_pin;
    locked=0;
-   locked_samples=0;
-   send=0;
+   locked_samples=0; 
    setup(); 
-   for(;;){
-      if(send){
-         uartTx('A');
-         send=0;
-      }
-   } 
+   for(;;);
 }
  
 //-----------------------------------------------------------------------------
@@ -60,58 +52,43 @@ void main (void){
 //-----------------------------------------------------------------------------
 
 INTERRUPT (TIMER2_ISR, TIMER2_IRQn){            
-   char pll;
+   // UART tx can be called directly and safely
+   // in this function as the UART packet will
+   // have been sent before the next timer interrupt
 
    // Disable all interrupts
    IE = 0;   
 
-   #ifdef DBG_SAMPLE
-   // Start the sample 
-   //SAMPLE = 1; 
-   #endif
-
-   // Call the lock function 
-    
-   pll=receiver_pll(RX); 
-   
-   if(pll == 0x01){    
-      sample <<= 1;
-      sample |= RX;
-         
-      if(locked == 1){  
-         locked_samples++; 
-         if(locked_samples == 500){
-            SAMPLE = 0;
-            locked = 0; 
-         }
-      }else{ 
-         if(sample == 0xAAAAAAAA){  
+   // Call the lock function  
+   if(locked == 1){
+      SBUF0 = RX + '0';
+      locked_samples++; 
+      if(locked_samples == SAMPLE_WINDOW){
+         #ifdef DBG_SAMPLE
+         SAMPLE = 0;
+         #endif
+         locked_samples = 0;
+         locked = 0; 
+      }
+   }else{
+      // Call the locking function 
+      if(receiver_pll(RX) == 1){    
+         sample <<= 1;
+         sample |= RX; 
+         if(sample == SAMPLE_PATTERN){  
+            SBUF0 = '\n';
+            #ifdef DBG_SAMPLE
             SAMPLE = 1;
-            locked = 1; 
-            uart_sample_cnt = 0;
-            locked_samples = 0;
+            #endif
+            locked = 1;  
          }
       }
-   } 
-
-   if(locked){
-      if(RX==1){
-         uartTx('1');
-      }else{
-         uartTx('0');
-      }
-      //send=1; 
    }
 
    // Enable the interrupts
    TMR2CN &= ~TMR2CN_TF2H__SET;
    IE = IE_EA__ENABLED | 
-        IE_ET2__ENABLED; 
-   
-   #ifdef DBG_SAMPLE
-   // End the sample 
-   //SAMPLE = 0; 
-   #endif 
+        IE_ET2__ENABLED;  
 } 
 
 //-----------------------------------------------------------------------------
