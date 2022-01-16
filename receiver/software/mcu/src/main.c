@@ -37,6 +37,12 @@ void setup(void);
 void main (void){        
    sample=0;
    setup();
+   for(;;){
+   uartTx('T');
+   uartTx('e');
+   uartTx('s');
+   uartTx('t');
+   }
    for(;;);
 }
  

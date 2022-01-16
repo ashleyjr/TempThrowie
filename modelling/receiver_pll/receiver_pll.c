@@ -2,7 +2,7 @@
 #define SCALE_PWR    20
 #define SCALE        (long)((long)1 << (SCALE_PWR)) 
 #define TIMESTEP     (long)(TIMESTEP_S * SCALE)
-#define CUT_OFF_HZ   (float)20
+#define CUT_OFF_HZ   (float)50
 #define RC           (1 / (2 * 3.1415 * CUT_OFF_HZ))
 #define ALPHA        (float)(TIMESTEP_S / (RC + TIMESTEP_S))
 #define BETA         (float)(1 - ALPHA)
@@ -35,6 +35,8 @@ static long p1_lpf;
 static long lpf;
 
 static long pid_y;
+static long integral;
+
 
 void receiver_pll_init(void) { 
    cycle    = 0;       
@@ -46,6 +48,7 @@ void receiver_pll_init(void) {
    p1_lpf   = 0;       
    pid_y    = 0;   
    p0_vco   = 0;
+   integral = 0;
 }
 
 char receiver_pll(char p0_ref) {
@@ -85,7 +88,9 @@ char receiver_pll(char p0_ref) {
    p1_lpf = p0_lpf;
    
    // PID Control 
-   pid_y = p0_lpf >> 13;  
+   integral += p0_lpf;
+   pid_y     = p0_lpf >> 14;  
+   pid_y    += (integral >> 21);
     
    // Update the PCO 
    cycle += pid_y;

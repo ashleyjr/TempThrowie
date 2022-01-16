@@ -81,7 +81,7 @@ class PhaseDet(DiscreteSim):
 class Lf(DiscreteSim):
     def __init__(   self,
                     timestep_s  = TIMESTEP_S,
-                    f           = 20):
+                    f           = 50):
         DiscreteSim.__init__(self, timestep_s)
         self.x = 0
         self.y_0 = 0
@@ -105,8 +105,8 @@ class Lf(DiscreteSim):
 class Pid(DiscreteSim):
     def __init__(   self,
                     timestep_s  = TIMESTEP_S,
-                    p           = (2 ** -13),
-                    i           = 0):
+                    p           = (2 ** -14),
+                    i           = (2 ** -21)):
         DiscreteSim.__init__(self, timestep_s)
         self.p = p
         self.i = i
@@ -124,7 +124,7 @@ class Pid(DiscreteSim):
 
     def tick(self):
         DiscreteSim.tick(self)
-        self.integral += ((self.x_0 + self.x_1) / 2)
+        self.integral += self.x_0
         self.y  = self.x_0 * self.p
         self.y += self.integral * self.i
         self.x_1 = self.x_0
@@ -212,7 +212,7 @@ def main(argv):
     impl = ctypes.CDLL(so)
     impl.receiver_pll_init()
 
-    wave    = SquareWave(phase_deg=77)
+    wave    = SquareWave(phase_deg=90)
     pco     = Pco()
     pd      = PhaseDet()
     pid     = Pid()
