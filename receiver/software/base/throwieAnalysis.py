@@ -1,13 +1,12 @@
+import numpy as np
 from throwieTransmission import throwieTransmission
 
-with open("throwie_20220116_230012.log", "r") as f:
+with open("throwie_20220119_194731.log", "r") as f:
     data=f.read().splitlines()[0]
     f.close()
 
 u = throwieTransmission(data)
+u.findPacket()
 
-for i in range(10):
-    print(u.cntPre(i))
-
-
+#u.sweep()
 u.plot("graph.png")
