@@ -9,14 +9,12 @@
 // Defines
 //-----------------------------------------------------------------------------
 
-//#define DBG_SAMPLE
+#define DBG_SAMPLE
 #define SAMPLE_WINDOW 4096
 #define SAMPLE_PATTERN 0xAAAAAAAA
 
 SBIT(RX,       SFR_P0,  7);  
-#ifdef DBG_SAMPLE
 SBIT(SAMPLE,   SFR_P1,  4);  
-#endif
 
 //-----------------------------------------------------------------------------
 // Global Variables
@@ -59,14 +57,13 @@ INTERRUPT (TIMER2_ISR, TIMER2_IRQn){
    // Disable all interrupts
    IE = 0;   
 
+   SAMPLE=1;
+
    // Call the lock function  
    if(locked == 1){
       SBUF0 = RX + '0';
       locked_samples++; 
-      if(locked_samples == SAMPLE_WINDOW){
-         #ifdef DBG_SAMPLE
-         SAMPLE = 0;
-         #endif
+      if(locked_samples == SAMPLE_WINDOW){ 
          locked_samples = 0;
          locked = 0; 
       }
@@ -76,15 +73,13 @@ INTERRUPT (TIMER2_ISR, TIMER2_IRQn){
          sample <<= 1;
          sample |= RX; 
          if(sample == SAMPLE_PATTERN){  
-            SBUF0 = '\n';
-            #ifdef DBG_SAMPLE
-            SAMPLE = 1;
-            #endif
+            SBUF0 = '\n'; 
             locked = 1;  
          }
       }
    }
 
+   SAMPLE=0;
    // Enable the interrupts
    TMR2CN &= ~TMR2CN_TF2H__SET;
    IE = IE_EA__ENABLED | 
