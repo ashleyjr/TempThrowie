@@ -69,12 +69,12 @@ class throwieTransmission():
             found = True
             if (pay[0] != [0,1,1,0,1,0,1,0]):
                 found = False
-            #for j in range(0,8):
-            #    xor =   pay[1][j] ^\
-            #            pay[2][j] ^\
-            #            pay[3][j]
-            #    if pay[4][j] != xor:
-            #        found = False
+            for j in range(0,8):
+                xor =   pay[1][j] ^\
+                        pay[2][j] ^\
+                        pay[3][j]
+                if pay[4][j] != xor:
+                    found = False
             if found:
                 print(i)
                 print(pay)

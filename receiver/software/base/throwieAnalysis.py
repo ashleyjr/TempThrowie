@@ -1,12 +1,20 @@
 import numpy as np
 from throwieTransmission import throwieTransmission
+import glob
 
-with open("throwie_20220119_194731.log", "r") as f:
-    data=f.read().splitlines()[0]
-    f.close()
+# List all log files
+logfiles = []
+for l in glob.glob("*.log"):
+    logfiles.append(l)
 
-u = throwieTransmission(data)
-u.findPacket()
+# Open each log file
+for log in logfiles:
+    with open(log, "r") as f:
+        data=f.read().splitlines()[0]
+        f.close()
+
+    u = throwieTransmission(data)
+    u.findPacket()
 
 #u.sweep()
-u.plot("graph.png")
+#u.plot("graph.png")
