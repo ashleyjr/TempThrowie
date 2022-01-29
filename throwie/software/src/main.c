@@ -18,7 +18,7 @@
 #define XOR_IDX            3
 #define PAY_SIZE_BYTES     4
 #define PAY_SIZE_BITS      (8*PAY_SIZE_BYTES)
-#define PRE_SIZE_BYTES     59
+#define PRE_SIZE_BYTES     10
 #define PRE_SIZE_BITS      (8*PRE_SIZE_BYTES)
 #define SRT_SIZE_BYTES     1
 #define SRT_SIZE_BITS      (8*SRT_SIZE_BYTES)
@@ -35,6 +35,7 @@ SBIT(LED,  SFR_P1, 1);
 // Global Variables
 //-----------------------------------------------------------------------------
 
+volatile U8 clk;
 volatile U16 ptr;
 volatile U8 payload[PAY_SIZE_BYTES];
 
@@ -57,7 +58,7 @@ void main (void){
    for(;;){ 
        
       sleep(); 
-      
+       
       #ifdef DBG_LED
       LED = 1; 
       #endif // DBG_LED
@@ -91,7 +92,7 @@ void main (void){
       IE |= IE_EA__ENABLED; 
       
       // Wait until sent
-      while(ptr != PKT_SIZE_BITS); 
+      while(ptr < PKT_SIZE_BITS); 
     
       #ifdef DBG_UART
       uartTx('T');
@@ -119,31 +120,47 @@ INTERRUPT (TIMER0_ISR, TIMER0_IRQn){
 INTERRUPT (TIMER2_ISR, TIMER2_IRQn){           
    U8 bt; 
    U8 by;
+   U8 value;
    
    if(ptr < PRE_SIZE_BITS){
       // PREAMBLE STAGE
-      MOD = ptr % 2; 
-      ptr++;
+      value = 1;
    }else{
       if(ptr < PRE_SRT_SIZE_BITS){
          // START STAGE
          bt  = SRT_CODE >> (ptr -  PRE_SIZE_BITS);
-         MOD = bt & 0x01;
-         ptr++;
+         value = bt & 0x01; 
       }else{
          if (ptr < PKT_SIZE_BITS){
             // PAYLOAD STAGE
             bt  = (ptr - PRE_SRT_SIZE_BITS); 
             by  = bt / 8;
             bt  = bt - (by * 8);
-            MOD = 0x01 & (payload[by] >> bt); 
-            ptr++;
+            value = 0x01 & (payload[by] >> bt);  
          }else{
             // STALL
-            MOD = 0;
+            value = 0;
          }
       }
    }
+   
+   // Manchester encoding
+   if((ptr < PKT_SIZE_BITS) && (
+         ((clk == 1) && (value == 1))||
+         ((clk == 0) && (value == 0)))
+      ){ 
+      MOD = 1;
+   }else{
+      MOD = 0;
+   }
+  
+   // Update ready for next phase
+   clk++;
+   clk %= 2;
+   if(clk == 0){
+      ptr++;
+   }
+  
    TMR2CN &= ~TMR2CN_TF2H__SET;
 }
 
@@ -266,13 +283,16 @@ void sleep(void){
    #endif // DBG_UART
 
    // Timer 2
-	//    - Frequency 1KHz
+	//    - Frequency 2KHz
    TMR2CN   = TMR2CN_TR2__RUN;
    TMR2L    = 0x00;
    TMR2H    = 0xFC;
    TMR2RLL  = 0x00;
    TMR2RLH  = 0xFC;
-   
+  
+   // Set clock phase
+   clk = 0;
+
    // Interrupts
    IE = IE_ET2__ENABLED;
 }
