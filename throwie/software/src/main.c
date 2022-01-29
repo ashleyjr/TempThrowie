@@ -18,7 +18,7 @@
 #define XOR_IDX            3
 #define PAY_SIZE_BYTES     4
 #define PAY_SIZE_BITS      (8*PAY_SIZE_BYTES)
-#define PRE_SIZE_BYTES     10
+#define PRE_SIZE_BYTES     2
 #define PRE_SIZE_BITS      (8*PRE_SIZE_BYTES)
 #define SRT_SIZE_BYTES     1
 #define SRT_SIZE_BITS      (8*SRT_SIZE_BYTES)
@@ -128,7 +128,7 @@ INTERRUPT (TIMER2_ISR, TIMER2_IRQn){
    }else{
       if(ptr < PRE_SRT_SIZE_BITS){
          // START STAGE
-         bt  = SRT_CODE >> (ptr -  PRE_SIZE_BITS);
+         bt  = SRT_CODE >> (ptr -  PRE_SIZE_BITS );
          value = bt & 0x01; 
       }else{
          if (ptr < PKT_SIZE_BITS){
@@ -143,9 +143,12 @@ INTERRUPT (TIMER2_ISR, TIMER2_IRQn){
          }
       }
    }
-   
+   // Clock
+   clk++;
+   clk %= 2;
+
    // Manchester encoding
-   if((ptr < PKT_SIZE_BITS) && (
+   if((ptr <= PKT_SIZE_BITS) && (
          ((clk == 1) && (value == 1))||
          ((clk == 0) && (value == 0)))
       ){ 
@@ -154,9 +157,7 @@ INTERRUPT (TIMER2_ISR, TIMER2_IRQn){
       MOD = 0;
    }
   
-   // Update ready for next phase
-   clk++;
-   clk %= 2;
+   // Update ready for next phase 
    if(clk == 0){
       ptr++;
    }
