@@ -10,7 +10,7 @@
 //-----------------------------------------------------------------------------
 
 #define DBG_SAMPLE
-#define SAMPLES_BYTES 10 
+#define SAMPLES_BYTES 14 
 #define SAMPLES_BITS (SAMPLES_BYTES*8)
 #define PERIOD 10
 SBIT(RX,       SFR_P0,  7);  
@@ -42,6 +42,7 @@ void main (void){
    
    sample_ptr=0;
    setup(); 
+   uartTx('0');
    for(;;);
 }
  
@@ -65,49 +66,54 @@ INTERRUPT (TIMER2_ISR, TIMER2_IRQn){
 
    // Disable all interrupts
    IE = 0;   
-  
+
+   if(RX){
+      uartTx('1');
+   }else{
+      uartTx('0');
+   }
    //SAMPLE=1;
    // Store sample in buffer
-   sample_ptr++;
-   sample_ptr %= SAMPLES_BITS; 
-   wrBit((U8)RX, sample_ptr);
+   //sample_ptr++;
+   //sample_ptr %= SAMPLES_BITS; 
+   //wrBit((U8)RX, sample_ptr);
  
-   // Scan back in buffer
-   
-   scan_ptr_a=sample_ptr;  
-   found = 1;
-   for(i=0;i<13;i++){ 
-      if(scan_ptr_a == 0){
-         scan_ptr_b == SAMPLES_BITS;
-      }
-      scan_ptr_b=scan_ptr_a-1;
-    
-      
-      by_a = scan_ptr_a >> 3; // /8
-      bt_a = scan_ptr_a - (by_a << 3); // *8
-      by_b = scan_ptr_b >> 3; // /8
-      bt_b = scan_ptr_b - (by_b << 3); // *8
-    
-      by_a = ((samples[by_a] >> bt_a) & 1);
-      by_b = ((samples[by_b] >> bt_b) & 1);
-      
-      edge = by_a ^ by_b;
-      
-      if(edge == 0){
-         found = 0;
-      }
-      
-      if(scan_ptr_a < PERIOD){
-         scan_ptr_a += SAMPLES_BITS;
-      }
-      scan_ptr_a -= PERIOD;
-      
-   }
-   if(found){
-      SAMPLE=1;
-   }else{
-      SAMPLE=0; 
-   }
+   //// Scan back in buffer
+   //
+   //scan_ptr_a=sample_ptr;  
+   //found = 1;
+   //for(i=0;i<13;i++){ 
+   //   if(scan_ptr_a == 0){
+   //      scan_ptr_b == SAMPLES_BITS;
+   //   }
+   //   scan_ptr_b=scan_ptr_a-1;
+   // 
+   //   
+   //   by_a = scan_ptr_a >> 3; // /8
+   //   bt_a = scan_ptr_a - (by_a << 3); // *8
+   //   by_b = scan_ptr_b >> 3; // /8
+   //   bt_b = scan_ptr_b - (by_b << 3); // *8
+   // 
+   //   by_a = ((samples[by_a] >> bt_a) & 1);
+   //   by_b = ((samples[by_b] >> bt_b) & 1);
+   //   
+   //   edge = by_a ^ by_b;
+   //   
+   //   if(edge == 0){
+   //      found = 0;
+   //   }
+   //   
+   //   if(scan_ptr_a < PERIOD){
+   //      scan_ptr_a += SAMPLES_BITS;
+   //   }
+   //   scan_ptr_a -= PERIOD;
+   //   
+   //}
+   //if(found){
+   //   SAMPLE=1;
+   //}else{
+   //   SAMPLE=0; 
+   //}
    //SAMPLE=0;
    
 
