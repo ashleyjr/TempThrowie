@@ -23,7 +23,10 @@ volatile U8  sample_ptr;
 volatile U8  samples[SAMPLES_BYTES];
 volatile U8 period_count;
 volatile U8 good_count;
-
+volatile U8 rx_1;
+volatile U8 period_cnt;
+volatile U8 sm;
+volatile U16 send;
 //-----------------------------------------------------------------------------
 // Prototypes
 //-----------------------------------------------------------------------------
@@ -39,10 +42,10 @@ void setup(void);
 //-----------------------------------------------------------------------------
 
 void main (void){        
-   
-   sample_ptr=0;
+   sm = 0; 
+   send = 1000;
    setup(); 
-   uartTx('0');
+   
    for(;;);
 }
  
@@ -51,15 +54,15 @@ void main (void){
 //-----------------------------------------------------------------------------
 
 INTERRUPT (TIMER2_ISR, TIMER2_IRQn){            
-   U16 i;
-   U8 scan_ptr_a;
-   U8 scan_ptr_b;
-   U8 by_a;
-   U8 bt_a;
-   U8 by_b;
-   U8 bt_b;
-   U8 edge;
-   U8 found;
+   //U16 i;
+   //U8 scan_ptr_a;
+   //U8 scan_ptr_b;
+   //U8 by_a;
+   //U8 bt_a;
+   //U8 by_b;
+   //U8 bt_b;
+   //U8 edge;
+   //U8 found;
    // UART tx can be called directly and safely
    // in this function as the UART packet will
    // have been sent before the next timer interrupt
@@ -67,11 +70,59 @@ INTERRUPT (TIMER2_ISR, TIMER2_IRQn){
    // Disable all interrupts
    IE = 0;   
 
-   if(RX){
-      uartTx('1');
-   }else{
-      uartTx('0');
+   switch(sm){
+      case 0:  if(RX == 0) sm=1;  else sm=0; break; 
+      case 1:  if(RX == 0) sm=2;  else sm=0; break;
+      case 2:  if(RX == 0) sm=3;  else sm=0; break; 
+      case 3:              sm=4;             break;
+      case 4:              sm=5;             break;
+      case 5:  if(RX == 1) sm=6;  else sm=0; break;
+      case 6:  if(RX == 1) sm=7;  else sm=0; break;
+      case 7:  if(RX == 1) sm=8;  else sm=0; break;
+      case 8:              sm=9;             break;
+      case 9:              sm=10;            break; 
+      case 10: if(RX == 0) sm=11; else sm=0; break;
+      case 11: if(RX == 0) sm=12; else sm=0; break;
+      case 12: if(RX == 0) sm=13; else sm=0; break;
+      case 13:             sm=14;            break;
+      case 14:             sm=15;            break;
+      case 15: if(RX == 1) sm=16; else sm=0; break;
+      case 16: if(RX == 1) sm=17; else sm=0; break;
+      case 17: if(RX == 1) sm=18; else sm=0; break; 
+      case 18:             sm=19;            break;
+      case 19:             sm=20;            break; 
+      case 20: if(RX == 0) sm=21; else sm=0; break;
+      case 21: if(RX == 0) sm=22; else sm=0; break;
+      case 22: if(RX == 0) sm=23; else sm=0; break;
+      case 23:             sm=24;            break;
+      case 24:             sm=25;            break;
+      case 25: if(RX == 1) sm=26; else sm=0; break;
+      case 26: if(RX == 1) sm=27; else sm=0; break;
+      case 27: if(RX == 1) sm=28; else sm=0; break; 
+      case 28: send=0;
+               sm=29;
+               break;
+      case 29: if(send == 1000){
+                  sm=0;
+               }
+               break;
    }
+   if(sm==26){
+      uartTx('\n');
+   }
+   if(sm==27){
+      uartTx('\r');
+   }
+   if(send < 1000){
+      if(RX){
+         uartTx('1');
+      }else{
+         uartTx('0');
+      }
+      send++;
+   }
+
+
    //SAMPLE=1;
    // Store sample in buffer
    //sample_ptr++;
