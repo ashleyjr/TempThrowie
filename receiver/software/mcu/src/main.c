@@ -10,30 +10,27 @@
 //-----------------------------------------------------------------------------
 
 #define DBG_SAMPLE
-#define SAMPLES_BYTES 14 
-#define SAMPLES_BITS (SAMPLES_BYTES*8)
+#define SAMPLE_BYTES 16
+#define SAMPLE_BITS (8*SAMPLE_BYTES)
 #define PERIOD 10
+#define LOCK_PERIODS 5
+#define LOCK_SAMPLES (PERIOD*LOCK_PERIODS)
+#define SAMPLES (PERIOD*SAMPLE_BITS)
+
 SBIT(RX,       SFR_P0,  7);  
 SBIT(SAMPLE,   SFR_P1,  4);  
 
 //-----------------------------------------------------------------------------
 // Global Variables
 //-----------------------------------------------------------------------------
-volatile U8  sample_ptr;
-volatile U8  samples[SAMPLES_BYTES];
-volatile U8 period_count;
-volatile U8 good_count;
-volatile U8 rx_1;
-volatile U8 period_cnt;
+
 volatile U8 sm;
 volatile U16 send;
+
 //-----------------------------------------------------------------------------
 // Prototypes
 //-----------------------------------------------------------------------------
 
-void wrBit(U8 value, U8 pos);
-U8 rdBit(U8 pos);
-char receiver_pll(char i);
 void uartTx(U8 tx);
 void setup(void);
 
@@ -43,9 +40,8 @@ void setup(void);
 
 void main (void){        
    sm = 0; 
-   send = 1000;
-   setup(); 
-   
+   send = SAMPLES;
+   setup();  
    for(;;);
 }
  
@@ -54,173 +50,50 @@ void main (void){
 //-----------------------------------------------------------------------------
 
 INTERRUPT (TIMER2_ISR, TIMER2_IRQn){            
-   //U16 i;
-   //U8 scan_ptr_a;
-   //U8 scan_ptr_b;
-   //U8 by_a;
-   //U8 bt_a;
-   //U8 by_b;
-   //U8 bt_b;
-   //U8 edge;
-   //U8 found;
-   // UART tx can be called directly and safely
-   // in this function as the UART packet will
-   // have been sent before the next timer interrupt
-
    // Disable all interrupts
    IE = 0;   
 
-   switch(sm){
-      case 0:  if(RX == 0) sm=1;  else sm=0; break; 
-      case 1:  if(RX == 0) sm=2;  else sm=0; break;
-      case 2:  if(RX == 0) sm=3;  else sm=0; break; 
-      case 3:              sm=4;             break;
-      case 4:              sm=5;             break;
-      case 5:  if(RX == 1) sm=6;  else sm=0; break;
-      case 6:  if(RX == 1) sm=7;  else sm=0; break;
-      case 7:  if(RX == 1) sm=8;  else sm=0; break;
-      case 8:              sm=9;             break;
-      case 9:              sm=10;            break; 
-      case 10: if(RX == 0) sm=11; else sm=0; break;
-      case 11: if(RX == 0) sm=12; else sm=0; break;
-      case 12: if(RX == 0) sm=13; else sm=0; break;
-      case 13:             sm=14;            break;
-      case 14:             sm=15;            break;
-      case 15: if(RX == 1) sm=16; else sm=0; break;
-      case 16: if(RX == 1) sm=17; else sm=0; break;
-      case 17: if(RX == 1) sm=18; else sm=0; break; 
-      case 18:             sm=19;            break;
-      case 19:             sm=20;            break; 
-      case 20: if(RX == 0) sm=21; else sm=0; break;
-      case 21: if(RX == 0) sm=22; else sm=0; break;
-      case 22: if(RX == 0) sm=23; else sm=0; break;
-      case 23:             sm=24;            break;
-      case 24:             sm=25;            break;
-      case 25: if(RX == 1) sm=26; else sm=0; break;
-      case 26: if(RX == 1) sm=27; else sm=0; break;
-      case 27: if(RX == 1) sm=28; else sm=0; break; 
-      case 28: send=0;
-               sm=29;
-               break;
-      case 29: if(send == 1000){
-                  sm=0;
-               }
-               break;
-   }
-   if(sm==26){
-      uartTx('\n');
-   }
-   if(sm==27){
-      uartTx('\r');
-   }
-   if(send < 1000){
-      if(RX){
-         uartTx('1');
-      }else{
-         uartTx('0');
+   // Pattern search state machine
+   // x000xx111xx000xx111...
+   if(sm < LOCK_SAMPLES){ 
+      switch(sm % PERIOD){ 
+         case 1:  
+         case 2:  
+         case 3:  if(RX == 0) sm++;  
+                  else        sm=0; 
+                  break;  
+         case 6:  
+         case 7:  
+         case 8:  if(RX == 1) sm++;  
+                  else        sm=0; 
+                  break; 
+         default: sm++;             
+                  break;
       }
+   }else{
+      // Start sending the window
+      if(sm == LOCK_SAMPLES){
+         send=0;
+         sm++;
+      }else{
+         // Window ended
+         if(send == SAMPLES){
+            sm=0;
+         }
+      }
+   }
+   
+   // Send sample over UART when in the sample window
+   if(send < SAMPLES){
+      uartTx(RX + '0'); 
       send++;
    }
 
-
-   //SAMPLE=1;
-   // Store sample in buffer
-   //sample_ptr++;
-   //sample_ptr %= SAMPLES_BITS; 
-   //wrBit((U8)RX, sample_ptr);
- 
-   //// Scan back in buffer
-   //
-   //scan_ptr_a=sample_ptr;  
-   //found = 1;
-   //for(i=0;i<13;i++){ 
-   //   if(scan_ptr_a == 0){
-   //      scan_ptr_b == SAMPLES_BITS;
-   //   }
-   //   scan_ptr_b=scan_ptr_a-1;
-   // 
-   //   
-   //   by_a = scan_ptr_a >> 3; // /8
-   //   bt_a = scan_ptr_a - (by_a << 3); // *8
-   //   by_b = scan_ptr_b >> 3; // /8
-   //   bt_b = scan_ptr_b - (by_b << 3); // *8
-   // 
-   //   by_a = ((samples[by_a] >> bt_a) & 1);
-   //   by_b = ((samples[by_b] >> bt_b) & 1);
-   //   
-   //   edge = by_a ^ by_b;
-   //   
-   //   if(edge == 0){
-   //      found = 0;
-   //   }
-   //   
-   //   if(scan_ptr_a < PERIOD){
-   //      scan_ptr_a += SAMPLES_BITS;
-   //   }
-   //   scan_ptr_a -= PERIOD;
-   //   
-   //}
-   //if(found){
-   //   SAMPLE=1;
-   //}else{
-   //   SAMPLE=0; 
-   //}
-   //SAMPLE=0;
-   
-
-
-   //SAMPLE=1;
-
-   //// Call the lock function  
-   //if(locked == 1){
-   //   SBUF0 = RX + '0';
-   //   locked_samples++; 
-   //   if(locked_samples == SAMPLE_WINDOW){ 
-   //      locked_samples = 0;
-   //      locked = 0; 
-   //   }
-   //}else{
-   //   // Call the locking function 
-   //   if(receiver_pll(RX) == 1){    
-   //      sample <<= 1;
-   //      sample |= RX; 
-   //      if(sample == SAMPLE_PATTERN){  
-   //         SBUF0 = '\n'; 
-   //         locked = 1;  
-   //      }
-   //   }
-   //}
-
-   //SAMPLE=0;
    // Enable the interrupts
    TMR2CN &= ~TMR2CN_TF2H__SET;
    IE = IE_EA__ENABLED | 
         IE_ET2__ENABLED;  
 } 
-
-void wrBit(U8 value, U8 pos){
-   U8 by;
-   U8 bt;
-   by = pos >> 3; // /8
-   bt = pos - (by << 3); // *8 
-   if(value){
-      samples[by] = samples[by] | (1 << bt); 
-   }else{
-      samples[by] = samples[by] & ~(1 << bt);
-   }
-}
-
-U8 rdBit(U8 pos){
-   U8 by;
-   U8 bt;
-   by = pos >> 3; // /8
-   bt = pos - (by << 3); // *8
-   if((samples[by] >> bt) & 1){
-      return 1; 
-   }else{
-      return 0; 
-   }
-}
 
 //-----------------------------------------------------------------------------
 // UART
