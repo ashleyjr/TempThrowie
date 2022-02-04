@@ -32,8 +32,53 @@ class throwieTransmission:
         lpf = signal.butter(2, 1000, 'lp', fs=10000, output='sos')
         return signal.sosfilt(lpf, self.data)
 
-    def getData(self):
-        return self.data
+    def getData(self, length=None):
+        if (length != None) and (length < len(self.data)):
+            return self.data[0:length]
+        else:
+            return self.data
+
+    def getMean(self, length=None):
+        mean = []
+        sm = 0
+        for i in self.data:
+            if sm == 0:
+                s = 0
+            elif sm in [1,2,3]:
+                s += i
+
+            if sm == 3:
+                if s in [2,3]:
+                    mean.append(1)
+                else:
+                    mean.append(0)
+
+            if sm == 4:
+                sm=0
+            else:
+                sm+=1
+
+        return mean
+
+    def getMan(self):
+        mean = self.getMean()
+        man = []
+        for i in range(2,len(mean),2):
+            if(mean[i-1] == 0) and (mean[i] == 1):
+                man.append(0)
+            elif(mean[i-1] == 1) and (mean[i] == 0):
+                man.append(1)
+        return man
+
+
+    def decode(self):
+        man = self.getMan()
+        found = 0
+        for i in range(4,len(man)):
+            if man[i-4:i] == [0,1,1,0]:
+                found = i
+                break
+        return man[found:found+(4*8)]
 
     def getEdges(self):
         edges = []
