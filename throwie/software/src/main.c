@@ -18,13 +18,13 @@
 #define XOR_IDX            3
 #define PAY_SIZE_BYTES     4
 #define PAY_SIZE_BITS      (8*PAY_SIZE_BYTES)
-#define PRE_SIZE_BYTES     2
+#define PRE_SIZE_BYTES     4
 #define PRE_SIZE_BITS      (8*PRE_SIZE_BYTES)
 #define SRT_SIZE_BYTES     1
 #define SRT_SIZE_BITS      (8*SRT_SIZE_BYTES)
 #define PRE_SRT_SIZE_BITS  (PRE_SIZE_BITS+SRT_SIZE_BITS)
 #define PKT_SIZE_BITS      (PRE_SIZE_BITS+SRT_SIZE_BITS+PAY_SIZE_BITS)
-#define SRT_CODE           0x6A
+#define SRT_CODE           0xAA
 
 SBIT(MOD,  SFR_P0, 7);  
 #ifdef DBG_LED

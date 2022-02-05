@@ -13,7 +13,7 @@
 #define SAMPLE_BYTES 16
 #define SAMPLE_BITS (8*SAMPLE_BYTES)
 #define PERIOD 10
-#define LOCK_PERIODS 5
+#define LOCK_PERIODS 10
 #define LOCK_SAMPLES (PERIOD*LOCK_PERIODS)
 #define SAMPLES (PERIOD*SAMPLE_BITS)
 
@@ -24,8 +24,13 @@ SBIT(SAMPLE,   SFR_P1,  4);
 // Global Variables
 //-----------------------------------------------------------------------------
 
-volatile U8 sm;
+volatile U16 sm;
 volatile U16 send;
+volatile char sample0;
+volatile char sample1;
+volatile char sample2;
+volatile char sample;
+volatile char sample_last;
 
 //-----------------------------------------------------------------------------
 // Prototypes
@@ -50,13 +55,19 @@ void main (void){
 //-----------------------------------------------------------------------------
 
 INTERRUPT (TIMER2_ISR, TIMER2_IRQn){            
+   U8 stride;
+   
    // Disable all interrupts
    IE = 0;   
+   SAMPLE=1;
+   
+   
+   stride = sm % PERIOD;
 
    // Pattern search state machine
    // x000xx111xx000xx111...
    if(sm < LOCK_SAMPLES){ 
-      switch(sm % PERIOD){ 
+      switch(stride){ 
          case 1:  
          case 2:  
          case 3:  if(RX == 0) sm++;  
@@ -70,24 +81,52 @@ INTERRUPT (TIMER2_ISR, TIMER2_IRQn){
          default: sm++;             
                   break;
       }
+   
+   // Take 3 samples and use the median as the sample
+   // xABCxxABCxxABCxxABC...
    }else{
-      // Start sending the window
-      if(sm == LOCK_SAMPLES){
-         send=0;
-         sm++;
-      }else{
-         // Window ended
-         if(send == SAMPLES){
-            sm=0;
-         }
+      switch(stride){ 
+         case 1:  
+         case 6:  sample = RX;
+                  break;
+         case 2:  
+         case 7:  sample += RX;
+                  break;
+         case 3:  
+         case 8:  sample += RX;
+                  if(sample > 1){
+                     sample = 1;
+                  }else{
+                     sample = 0;
+                  }  
+                  break; 
+         case 9:  sample_last = sample;
+                  break;
+         case 4:  if((sample_last == 0) && (sample == 1)){
+                     uartTx('0');
+                  }else{
+                     if((sample_last == 1) && (sample == 0)){
+                        uartTx('1');
+                     }
+                  }
+                  break; 
       }
+      
+      
+      
+      
+      sm++;
+      if(sm == (SAMPLES+LOCK_SAMPLES)){ 
+         uartTx('\n');
+      }
+      if(sm > (SAMPLES+LOCK_SAMPLES)){ 
+         uartTx('\r');
+         sm=0;
+      }
+      SAMPLE=0;  
+
    }
    
-   // Send sample over UART when in the sample window
-   if(send < SAMPLES){
-      uartTx(RX + '0'); 
-      send++;
-   }
 
    // Enable the interrupts
    TMR2CN &= ~TMR2CN_TF2H__SET;
@@ -102,7 +141,7 @@ INTERRUPT (TIMER2_ISR, TIMER2_IRQn){
 void uartTx(U8 tx){ 
    SCON0_TI = 0;
    SBUF0 = tx;
-   while(!SCON0_TI); 
+   //while(!SCON0_TI); 
 }
 
 //-----------------------------------------------------------------------------
