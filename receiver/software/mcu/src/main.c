@@ -156,9 +156,9 @@ INTERRUPT (TIMER2_ISR, TIMER2_IRQn){
                   }
 
                   if(locking){
-                     start = start << 1;
-                     start |= decode;
-                     if(start == 0x55){
+                     start = start >> 1;
+                     start |= decode << 7;
+                     if(start == 0xAA){
                         locking = 0;
                         data = 0;
                         finish = 0;
