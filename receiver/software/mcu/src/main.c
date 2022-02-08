@@ -31,6 +31,11 @@ volatile char sample1;
 volatile char sample2;
 volatile char sample;
 volatile char sample_last;
+volatile char locking;
+volatile U8 start;
+volatile U32 data;
+volatile U16 finish;
+volatile U8 pay[4];
 
 //-----------------------------------------------------------------------------
 // Prototypes
@@ -44,10 +49,32 @@ void setup(void);
 //-----------------------------------------------------------------------------
 
 void main (void){        
+   U8 i;
+   U8 j;
+   U8 nibble;
    sm = 0; 
-   send = SAMPLES;
+   send = 0;
    setup();  
-   for(;;);
+   for(;;){
+      if(send){
+         // Send the data if it passes the checking
+         if(pay[3] == (pay[0] ^ pay[1] ^ pay[2])){ 
+            for(i=0;i<4;i++){
+               for(j=0;j<8;j+=4){
+                  nibble = (pay[i] >> j) & 0xF;
+                  if(nibble < 10){
+                     uartTx(nibble + '0');
+                  }else{
+                     uartTx(nibble - 10 + 'A');
+                  }
+               }
+            }
+            uartTx('\n');
+            uartTx('\r');
+         }
+         send=0;
+      }
+   };
 }
  
 //-----------------------------------------------------------------------------
@@ -56,7 +83,8 @@ void main (void){
 
 INTERRUPT (TIMER2_ISR, TIMER2_IRQn){            
    U8 stride;
-   
+   char decode;
+
    // Disable all interrupts
    IE = 0;   
    SAMPLE=1;
@@ -67,15 +95,21 @@ INTERRUPT (TIMER2_ISR, TIMER2_IRQn){
    // Pattern search state machine
    // x000xx111xx000xx111...
    if(sm < LOCK_SAMPLES){ 
+      locking = 1;
+      start = 0;
       switch(stride){ 
+         case 0:
          case 1:  
          case 2:  
-         case 3:  if(RX == 0) sm++;  
+         case 3:  
+         case 4:  if(RX == 0) sm++;  
                   else        sm=0; 
                   break;  
+         case 5:
          case 6:  
          case 7:  
-         case 8:  if(RX == 1) sm++;  
+         case 8:  
+         case 9:  if(RX == 1) sm++;  
                   else        sm=0; 
                   break; 
          default: sm++;             
@@ -86,41 +120,65 @@ INTERRUPT (TIMER2_ISR, TIMER2_IRQn){
    // xABCxxABCxxABCxxABC...
    }else{
       switch(stride){ 
-         case 1:  
-         case 6:  sample = RX;
+         case 0:  
+         case 5:  sample = RX;
                   break;
-         case 2:  
-         case 7:  sample += RX;
+         case 1: 
+         case 2:
+         case 3:
+         case 6:
+         case 7:
+         case 8:  sample += RX;  
+                  break; 
+         case 9:  sample += RX;
+                  
+                  if(sample > 2){
+                     sample_last = 1;
+                  }else{
+                     sample_last = 0;
+                  }
                   break;
-         case 3:  
-         case 8:  sample += RX;
-                  if(sample > 1){
+         
+         case 4:  sample += RX;
+                  
+                  if(sample > 2){
                      sample = 1;
                   }else{
                      sample = 0;
-                  }  
-                  break; 
-         case 9:  sample_last = sample;
-                  break;
-         case 4:  if((sample_last == 0) && (sample == 1)){
-                     uartTx('0');
+                  }
+                  
+                  if((sample_last == 0) && (sample == 1)){
+                     decode = 0;
                   }else{
                      if((sample_last == 1) && (sample == 0)){
-                        uartTx('1');
+                        decode = 1; 
                      }
                   }
+
+                  if(locking){
+                     start = start << 1;
+                     start |= decode;
+                     if(start == 0x55){
+                        locking = 0;
+                        data = 0;
+                        finish = 0;
+                     }
+                  }else{
+                     if(finish < 32){
+                        pay[finish>>3] = pay[finish>>3] >> 1;
+                        pay[finish>>3] |= decode << 7;
+                        finish++;
+                        if(finish == 32){
+                           send = 1;
+                        }
+                     }
+                  }
+
+
                   break; 
-      }
-      
-      
-      
-      
+      } 
       sm++;
-      if(sm == (SAMPLES+LOCK_SAMPLES)){ 
-         uartTx('\n');
-      }
-      if(sm > (SAMPLES+LOCK_SAMPLES)){ 
-         uartTx('\r');
+      if(sm > (SAMPLES+LOCK_SAMPLES)){  
          sm=0;
       }
       SAMPLE=0;  
@@ -141,7 +199,7 @@ INTERRUPT (TIMER2_ISR, TIMER2_IRQn){
 void uartTx(U8 tx){ 
    SCON0_TI = 0;
    SBUF0 = tx;
-   //while(!SCON0_TI); 
+   while(!SCON0_TI); 
 }
 
 //-----------------------------------------------------------------------------
