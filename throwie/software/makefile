@@ -1,4 +1,4 @@
-ID=53
+ID=0x4D
 
 all:
 	sdcc  src/main.c -I inc/ -DID=${ID} --iram-size 256 --xram-size 256 	

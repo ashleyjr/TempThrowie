@@ -45,6 +45,7 @@ volatile U8 payload[PAY_SIZE_BYTES];
 
 #ifdef DBG_UART
 void uartTx(U8 tx);
+void uartHex(U8 tx);
 void uartNum(U16 n);
 #endif // DBG_UART
 void sleep(void);
@@ -95,12 +96,18 @@ void main (void){
       while(ptr < PKT_SIZE_BITS); 
     
       #ifdef DBG_UART
-      uartTx('T');
-      uartTx(':');
-      uartNum(payload[TEMP_IDX]);
-      uartTx('B');
-      uartTx(':');
-      uartNum(payload[BATT_IDX]);
+      uartHex(payload[ID_IDX]);
+      uartHex(payload[TEMP_IDX]);
+      uartHex(payload[BATT_IDX]);
+      uartHex(payload[XOR_IDX]);
+      uartTx('\n');
+      uartTx('\r');
+      //uartTx('T');
+      //uartTx(':');
+      //uartNum(payload[TEMP_IDX]);
+      //uartTx('B');
+      //uartTx(':');
+      //uartNum(payload[BATT_IDX]);
       #endif  
       
       #ifdef DBG_LED
@@ -177,6 +184,18 @@ void uartTx(U8 tx){
    while(!SCON0_TI); 
 }
 
+void uartHex(U8 tx){
+   U8 i,j;
+   for(i=4;i<5;i-=4){
+      j = (tx >> i) & 0xF;
+      if(j > 9){
+         uartTx(j + 'A' - 10);
+      }else{
+         uartTx(j + '0');
+      }
+   }
+
+}
 void uartNum(U16 tx){
    U16 n;
    U8 i;

@@ -60,7 +60,7 @@ void main (void){
          // Send the data if it passes the checking
          if(pay[3] == (pay[0] ^ pay[1] ^ pay[2])){ 
             for(i=0;i<4;i++){
-               for(j=0;j<8;j+=4){
+               for(j=4;j<5;j-=4){
                   nibble = (pay[i] >> j) & 0xF;
                   if(nibble < 10){
                      uartTx(nibble + '0');
