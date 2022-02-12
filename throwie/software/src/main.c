@@ -75,7 +75,7 @@ void main (void){
       payload[TEMP_IDX] = ADC0;  
 
       // Read Battery ADC 
-      ADC0MX   = ADC0MX_ADC0MX__ADC0P12;
+      ADC0MX   = ADC0MX_ADC0MX__ADC0P2;
       REF0CN   = REF0CN_REFSL__VDD_PIN;  
       ADC0CF   = ADC0CF_ADTM__TRACK_DELAYED;         
       ADC0CN0  = ADC0CN0_ADEN__ENABLED | 
