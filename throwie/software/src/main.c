@@ -26,6 +26,24 @@
 #define PKT_SIZE_BITS      (PRE_SIZE_BITS+SRT_SIZE_BITS+PAY_SIZE_BITS)
 #define SRT_CODE           0xAA
 
+////////////////////////////////////////////
+// These are the setting for a Rev C device
+//
+//  64 * 1023 = 65472 = 1.65V
+//  (ADC does 64 reads and accumlates)
+//
+//  757mV @ 0C
+//  2.85mV/C
+// 
+//  -12C = 722.8mV = 65472*(0.7228/1.65) = 28681 
+//   51C = 902.4mV = 65472*(0.9024/1.65) = 35807
+//
+//   Scale = (35807-28681)/256 = 27.835
+
+#define TEMP_LO 28681 
+#define TEMP_HI 35807
+#define TEMP_SC 28
+
 SBIT(MOD,  SFR_P0, 7);  
 #ifdef DBG_LED
 SBIT(LED,  SFR_P1, 1);  
@@ -54,7 +72,7 @@ void sleep(void);
 // Main Routine
 //-----------------------------------------------------------------------------
 
-void main (void){       
+void main (void){        
    payload[ID_IDX] = ID; 
    for(;;){ 
        
@@ -63,52 +81,89 @@ void main (void){
       #ifdef DBG_LED
       LED = 1; 
       #endif // DBG_LED
-     
-      // Read Temp ADC
-      ADC0MX   = ADC0MX_ADC0MX__TEMP;   
-      REF0CN   = REF0CN_REFSL__INTERNAL_LDO |
-                 REF0CN_TEMPE__TEMP_ENABLED; 
-      ADC0CF   = ADC0CF_ADTM__TRACK_DELAYED;         
-      ADC0CN0  = ADC0CN0_ADEN__ENABLED | 
-                 ADC0CN0_ADBUSY__SET;
-      while(~ADC0CN0 & ADC0CN0_ADINT__SET); 
-      payload[TEMP_IDX] = ADC0;  
-
+   
       // Read Battery ADC 
-      ADC0MX   = ADC0MX_ADC0MX__ADC0P2;
-      REF0CN   = REF0CN_REFSL__VDD_PIN;  
-      ADC0CF   = ADC0CF_ADTM__TRACK_DELAYED;         
       ADC0CN0  = ADC0CN0_ADEN__ENABLED | 
                  ADC0CN0_ADBUSY__SET;
-      while(~ADC0CN0 & ADC0CN0_ADINT__SET); 
-      payload[BATT_IDX] = ADC0;  
+      ADC0MX   = ADC0MX_ADC0MX__ADC0P2;    
+      REF0CN   = REF0CN_REFSL__VDD_PIN; 
+      ADC0CF   = ADC0CF_ADTM__TRACK_DELAYED | 
+                 ADC0CF_ADGN__GAIN_1;          
+      ADC0CN1  = ADC0CN1_ADCMBE__CM_BUFFER_ENABLED;
+      ADC0AC   = ADC0AC_AD12BE__12_BIT_ENABLED|
+                 ADC0AC_ADAE__ACC_ENABLED|
+                 ADC0AC_ADRPT__ACC_4;
+      ADC0PWR  = (0 << ADC0PWR_ADPWR__SHIFT) | 
+                 ADC0PWR_ADLPM__LP_BUFFER_DISABLED | 
+                 ADC0PWR_ADMXLP__LP_MUX_VREF_DISABLED | 
+                 ADC0PWR_ADBIAS__MODE3; 
+      ADC0CN0  = ADC0CN0_ADBMEN__BURST_ENABLED|
+                 ADC0CN0_ADEN__ENABLED | 
+                 ADC0CN0_ADBUSY__SET;
+      while(0 == (ADC0CN0 & ADC0CN0_ADINT__SET)); 
+      payload[BATT_IDX] = ADC0 >> 4;  
       
+      // Read temperature diode
+      ADC0MX   = ADC0MX_ADC0MX__TEMP;    
+      REF0CN   = REF0CN_REFSL__INTERNAL_VREF |
+                 REF0CN_IREFLVL__1P65 |
+                 REF0CN_TEMPE__TEMP_ENABLED; 
+      ADC0CF   = ADC0CF_ADTM__TRACK_DELAYED | 
+                 ADC0CF_ADGN__GAIN_1;          
+      ADC0CN1  = ADC0CN1_ADCMBE__CM_BUFFER_ENABLED;
+      ADC0AC   = ADC0AC_AD12BE__12_BIT_ENABLED|
+                 ADC0AC_ADAE__ACC_ENABLED|
+                 ADC0AC_ADRPT__ACC_64;
+      ADC0PWR  = (0 << ADC0PWR_ADPWR__SHIFT) | 
+                 ADC0PWR_ADLPM__LP_BUFFER_DISABLED | 
+                 ADC0PWR_ADMXLP__LP_MUX_VREF_DISABLED | 
+                 ADC0PWR_ADBIAS__MODE3; 
+      ADC0CN0  = ADC0CN0_ADBMEN__BURST_ENABLED|
+                 ADC0CN0_ADEN__ENABLED | 
+                 ADC0CN0_ADBUSY__SET;
+      while(0 == (ADC0CN0 & ADC0CN0_ADINT__SET));  
+   
+      // Scale temp to 8 bits 
+      if(ADC0 < TEMP_LO){
+         payload[TEMP_IDX] = 0;
+      }else{
+         if(ADC0 > TEMP_HI){
+            payload[TEMP_IDX] = 255;
+         }else{
+            payload[TEMP_IDX] = (ADC0 - TEMP_LO) / TEMP_SC; 
+         }
+      } 
+     
       // XOR
-      payload[XOR_IDX] = payload[ID_IDX] ^
-                         payload[TEMP_IDX] ^
-                         payload[BATT_IDX];
-      
+      payload[XOR_IDX]  = payload[ID_IDX];
+      payload[XOR_IDX] ^= payload[TEMP_IDX];
+      payload[XOR_IDX] ^= payload[BATT_IDX];
+
       // Zero pointer and start sending 
       ptr = 0;
       IE |= IE_EA__ENABLED; 
-      
-      // Wait until sent
-      while(ptr < PKT_SIZE_BITS); 
-    
+       
       #ifdef DBG_UART
       uartHex(payload[ID_IDX]);
       uartHex(payload[TEMP_IDX]);
       uartHex(payload[BATT_IDX]);
       uartHex(payload[XOR_IDX]);
+      uartTx(' ');
+      uartTx('(');
+      uartTx('T');
+      uartTx(':');
+      uartNum(payload[TEMP_IDX]);
+      uartTx(',');
+      uartTx('B');
+      uartTx(':');
+      uartNum(payload[BATT_IDX]);
+      uartTx(')');
       uartTx('\n');
       uartTx('\r');
-      //uartTx('T');
-      //uartTx(':');
-      //uartNum(payload[TEMP_IDX]);
-      //uartTx('B');
-      //uartTx(':');
-      //uartNum(payload[BATT_IDX]);
       #endif  
+       
+      // Wait until sent
+      while(ptr < PKT_SIZE_BITS); 
       
       #ifdef DBG_LED
       LED = 0; 
@@ -210,8 +265,6 @@ void uartNum(U16 tx){
    for(i=0;i<5;i++){
       uartTx(c[i]); 
    }
-   uartTx('\n'); 
-   uartTx('\r');
 }
 #endif // DBG_UART
 
