@@ -1,34 +1,44 @@
-import numpy as np
-from throwieReception import throwieReception
-from throwieTransmission import throwieTransmission
+from throwieConstants import throwieConstants as cnsts
 import glob
-import matplotlib.pyplot as plt
+import pickle
+import os
+import sys
 
-# List all log files
-logfiles = []
+# Open DB
+if os.path.isfile(cnsts.DBNAME):
+    # Open the exisiting DB
+    with open(cnsts.DBNAME, 'rb') as f:
+        db = pickle.load(f)
+else:
+    # Create a new DB
+    db = []
+    for i in range(256):
+        db.append([])
+
+# Inspect each log file and add to db
 for l in glob.glob("*.log"):
-    logfiles.append(l)
+    with open(l, 'r') as f:
+        rx = f.read()
+        iden = int(rx[0:2], 16)
+        temp = (int(rx[2:4], 16) / 4) - 10
+        batt = (int(rx[4:6], 16) * (3.3/256))/ 0.471
+        print(f"{l}: ID={iden}, Temp={temp}, Battery={batt}")
+        db[iden].append({
+            'time' : l,
+            'temp' : temp,
+            'batt' : batt
+        })
+        os.remove(l)
 
-# Analyse
-ur = throwieReception(logfiles)
-ur.process()
-ur.plot("rx_histogram.png")
+# Print the DB
+for i in range(len(db)):
+    if len(db[i]) > 0:
+        print(f"ID={i}")
+        for e in db[i]:
+            print(f"\tTime = {e['time']}")
+            print(f"\t\tTemp    = {e['temp']}C")
+            print(f"\t\tBattery = {e['batt']}V")
+# Write DB
+with open(cnsts.DBNAME, 'wb') as f:
+    pickle.dump(db, f)
 
-# Open each log file
-for log in logfiles:
-    with open(log, "r") as f:
-        data=f.read().splitlines()[0]
-        f.close()
-
-    u = throwieTransmission(data)
-    #print(len(u.getData()))
-    #print(u.getMean())
-    #print(u.getMan())
-    print(u.decode())
-    #u.plot(log.replace(".log","_raw.png"), u.getData())
-    #u.plot(log.replace(".log","_start.png"), u.getData(50))
-    #u.plot(log.replace(".log","_mean.png"), u.getMean()[0:64])
-    #u.plot(log.replace(".log","_man.png"), u.getMan())
-    #u.plot(log.replace(".log","_fft.png"), u.fft())
-    #u.plot(log.replace(".log","_filter.png"), u.filter())
-    #u.hist(log.replace(".log","_hist.png"), u.getDeltas())
