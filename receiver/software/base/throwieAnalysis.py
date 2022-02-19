@@ -2,9 +2,6 @@ from throwieConstants import throwieConstants as cnsts
 import glob
 import pickle
 import os
-import sys
-import matplotlib.pyplot as plt
-import datetime
 import argparse
 
 class throwieAnalysis:
@@ -36,15 +33,19 @@ class throwieAnalysis:
         logs = glob.glob(cnsts.LOGS)
         for l in logs:
             with open(l, 'r') as f:
-                rx = f.read()
-                self.db[cnsts.rxToId(rx)].append({
-                    'year' : cnsts.pathToYear(l),
-                    'month': cnsts.pathToMonth(l),
-                    'day'  : cnsts.pathToDay(l),
-                    'hour' : cnsts.pathToHour(l),
-                    'temp' : cnsts.rxToTemp(rx),
-                    'batt' : cnsts.rxToBattery(rx)
-                })
+                try:
+                    rx = f.read()
+                    self.db[cnsts.rxToId(rx)].append({
+                        'year' : cnsts.pathToYear(l),
+                        'month': cnsts.pathToMonth(l),
+                        'day'  : cnsts.pathToDay(l),
+                        'hour' : cnsts.pathToHour(l),
+                        'temp' : cnsts.rxToTemp(rx),
+                        'batt' : cnsts.rxToBattery(rx)
+                    })
+                except:
+                    print(f"Log file{l} corrupt")
+            os.remove(l)
 
     def __graphDay(self, filename, dt, key):
         for i in range(len(self.db)):
@@ -71,12 +72,26 @@ class throwieAnalysis:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(prog='PROG', allow_abbrev=False)
-
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--update', action='store_true')     
+    parser.add_argument('--loop', action='store_true')     
+    parser.add_argument('--plottoday', action='store_true')
+    args = vars(parser.parse_args())
 
     u = throwieAnalysis()
-    u.addLogs()
-    u.writeDb()
 
-    u.graphTemp(datetime.datetime.today())
-    u.graphBattery(datetime.datetime.today())
+    if args['update']:
+        while True:
+            u.addLogs()
+            u.writeDb()
+            if args['loop']:
+                import time
+                time.sleep(10)
+            else:
+                break
+
+    if args['plottoday']:
+        import matplotlib.pyplot as plt
+        import datetime
+        u.graphTemp(datetime.datetime.today())
+        u.graphBattery(datetime.datetime.today())
