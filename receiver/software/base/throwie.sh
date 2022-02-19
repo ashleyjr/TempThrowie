@@ -1,2 +1,2 @@
 #!/bin/bash
-python throwieLogging.py & python throwieAnalysis.py --update --loop
+python throwieLogging.py & python throwieAnalysis.py --update --loop &
