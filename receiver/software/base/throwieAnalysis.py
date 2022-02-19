@@ -4,79 +4,79 @@ import pickle
 import os
 import sys
 import matplotlib.pyplot as plt
+import datetime
+import argparse
 
-# Open DB
-if os.path.isfile(cnsts.DBNAME):
-    # Open the exisiting DB
-    with open(cnsts.DBNAME, 'rb') as f:
-        db = pickle.load(f)
-else:
-    # Create a new DB
-    db = []
-    for i in range(256):
-        db.append([])
+class throwieAnalysis:
 
-# Inspect each log file and add to db
-for l in glob.glob("*.log"):
-    with open(l, 'r') as f:
-        rx = f.read()
-        iden = int(rx[0:2], 16)
-        temp = (int(rx[2:4], 16) / 4) - 10
-        batt = (int(rx[4:6], 16) * (3.3/256))/ 0.471
-        hours = int(l[17:19])
-        minutes = int(l[19:21])
-        seconds = int(l[21:23])
-        hour = hours + (float(minutes) / 60) + (float(seconds) / 3600)
-        db[iden].append({
-            'day'  : l[8:16],
-            'hour' : hour,
-            'temp' : temp,
-            'batt' : batt
-        })
-        print(f"{l}: ID={iden}, Hour={hour}, Temp={temp}, Battery={batt}")
+    def __init__(self):
+        """
+        Open DB if it exists or create
+        a new one
+        """
+        if os.path.isfile(cnsts.DBNAME):
+            with open(cnsts.DBNAME, 'rb') as f:
+                self.db = pickle.load(f)
+        else:
+            self.db = []
+            for i in range(cnsts.MAX_THROWIES):
+                self.db.append([])
 
-        os.remove(l)
+    def writeDb(self):
+        """
+        Write DB
+        """
+        with open(cnsts.DBNAME, 'wb') as f:
+            pickle.dump(self.db, f)
 
-# Print the DB
-#for i in range(len(db)):
-#    if len(db[i]) > 0:
-#        print(f"ID={i}")
-#        for e in db[i]:
-#            print(f"\tTime = {e['time']}")
-#            print(f"\t\tTemp    = {e['temp']}C")
-#            print(f"\t\tBattery = {e['batt']}V")
-# Write DB
-with open(cnsts.DBNAME, 'wb') as f:
-    pickle.dump(db, f)
+    def addLogs(self):
+        """
+        Inspect each log file and add to db
+        """
+        logs = glob.glob(cnsts.LOGS)
+        for l in logs:
+            with open(l, 'r') as f:
+                rx = f.read()
+                self.db[cnsts.rxToId(rx)].append({
+                    'year' : cnsts.pathToYear(l),
+                    'month': cnsts.pathToMonth(l),
+                    'day'  : cnsts.pathToDay(l),
+                    'hour' : cnsts.pathToHour(l),
+                    'temp' : cnsts.rxToTemp(rx),
+                    'batt' : cnsts.rxToBattery(rx)
+                })
+
+    def __graphDay(self, filename, dt, key):
+        for i in range(len(self.db)):
+            if len(self.db[i]) > 0:
+                data = []
+                hour = []
+                for e in self.db[i]:
+                    if  (dt.year == e['year']) and\
+                        (dt.month == e['month']) and \
+                        (dt.day == e['day']):
+                        hour.append(e['hour'])
+                        data.append(e[key])
+                data = [x for _,x in sorted(zip(hour,data))]
+                hour = sorted(hour)
+                plt.plot(hour, data)
+        plt.savefig(filename, dpi=200)
+        plt.close()
+
+    def graphBattery(self, dt):
+        self.__graphDay(dt.strftime("graph_battery_%Y%m%d.png"), dt, 'batt')
+
+    def graphTemp(self, dt):
+        self.__graphDay(dt.strftime("graph_temp_%Y%m%d.png"), dt, 'temp')
 
 
-# Plot all temps
-for i in range(len(db)):
-    if len(db[i]) > 0:
-        temp = []
-        hour = []
-        for e in db[i]:
-            hour.append(e['hour'])
-            temp.append(e['temp'])
-        temp = [x for _,x in sorted(zip(hour,temp))]
-        hour = sorted(hour)
-        plt.plot(hour, temp)
-
-plt.savefig("temp_graph.png", dpi=200)
-plt.close()
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(prog='PROG', allow_abbrev=False)
 
 
-# Plot all battery
-for i in range(len(db)):
-    if len(db[i]) > 0:
-        batt = []
-        hour = []
-        for e in db[i]:
-            hour.append(e['hour'])
-            batt.append(e['batt'])
-        temp = [x for _,x in sorted(zip(hour,batt))]
-        hour = sorted(hour)
-        plt.plot(hour, batt)
+    u = throwieAnalysis()
+    u.addLogs()
+    u.writeDb()
 
-plt.savefig("batt_graph.png", dpi=200)
-plt.close()
+    u.graphTemp(datetime.datetime.today())
+    u.graphBattery(datetime.datetime.today())
