@@ -9,6 +9,6 @@ with serial.Serial('/dev/ttyUSB0', cnsts.BAUDRATE) as ser:
         d = datetime.now()
         name = d.strftime("throwie_%Y%m%d_%H%M%S.log")
         with open(name, "w") as f:
-            f.write(s)
+            f.write(s.decode("utf-8") )
             f.close()
 
