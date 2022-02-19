@@ -1,4 +1,19 @@
-# TempThrowie
+# TempThrowie: Install
+
+## MCUs
+
+   - SDCC : mcs51/z80/z180/r2k/r3ka/gbz80/tlcs90/ds390/TININative/ds400/hc08/s08/stm8 3.5.0
+   - SimplicityStudio_v4 flash8051
+   - Silicon Labs 8-Bit USB Debug Adapter
+
+## Basestation
+
+   - Basestation is a Raspberry Pi Model B Plus Rev 1.2
+   - Fresh install of Raspbian GNU/Linux 11 (bullseye)
+   - pip install matplotlib
+   - sudo apt-get install libatlas-base-dev
+
+# TempThrowie: Spec
 
 ## Throwie
 
