@@ -4,6 +4,7 @@ import pickle
 import os
 import argparse
 import math
+import datetime
 
 class throwieAnalysis:
 
@@ -128,7 +129,6 @@ if __name__ == "__main__":
         (args['plotdate'] is not None) or\
         (args['plotsince'] is not None):
         import matplotlib.pyplot as plt
-        import datetime
 
     if args['plottoday']:
         u.graphTemp(datetime.datetime.today())

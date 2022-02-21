@@ -18,5 +18,5 @@ class throwieConstants():
         return round(((int(rx[4:6], 16) * (3.3/256))/ 0.471), 2)
 
     def pathDateTime(path):
-        return int(path[13:28])
+        return path[13:28]
 
