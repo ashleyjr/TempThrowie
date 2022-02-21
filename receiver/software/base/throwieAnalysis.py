@@ -3,6 +3,7 @@ import glob
 import pickle
 import os
 import argparse
+import math
 
 class throwieAnalysis:
 
@@ -35,11 +36,9 @@ class throwieAnalysis:
             with open(l, 'r') as f:
                 try:
                     rx = f.read()
+                    dt = datetime.datetime.strptime(cnsts.pathDateTime(l), '%Y%m%d_%H%M%S')
                     self.db[cnsts.rxToId(rx)].append({
-                        'year' : cnsts.pathToYear(l),
-                        'month': cnsts.pathToMonth(l),
-                        'day'  : cnsts.pathToDay(l),
-                        'hour' : cnsts.pathToHour(l),
+                        'datetime' : dt,
                         'temp' : cnsts.rxToTemp(rx),
                         'batt' : cnsts.rxToBattery(rx)
                     })
@@ -47,19 +46,47 @@ class throwieAnalysis:
                     print(f"Log file{l} corrupt")
             os.remove(l)
 
+    def __dbHasId(self, ident):
+        return len(self.db[ident]) > 0
+
+    def __getDay(self, ident, dt, key):
+        data = []
+        hour = []
+        for e in self.db[ident]:
+            if  (dt.year == e['year']) and\
+                (dt.month == e['month']) and \
+                (dt.day == e['day']):
+                hour.append(e['hour'])
+                data.append(e[key])
+        data = [x for _,x in sorted(zip(hour,data))]
+        hour = sorted(hour)
+        return hour, data
+
+    def __getSince(self, ident, then, key):
+        data = []
+        hour = []
+        for e in self.db[ident]:
+            this = self.__makeDatetime(e)
+            if  this > then:
+                diff = float((this - then).total_seconds()) / 3600
+                hour.append(diff)
+                data.append(e[key])
+        data = [x for _,x in sorted(zip(hour,data))]
+        hour = sorted(hour)
+        return hour, data
+
     def __graphDay(self, filename, dt, key):
         for i in range(len(self.db)):
-            if len(self.db[i]) > 0:
-                data = []
-                hour = []
-                for e in self.db[i]:
-                    if  (dt.year == e['year']) and\
-                        (dt.month == e['month']) and \
-                        (dt.day == e['day']):
-                        hour.append(e['hour'])
-                        data.append(e[key])
-                data = [x for _,x in sorted(zip(hour,data))]
-                hour = sorted(hour)
+            if self.__dbHasId(i):
+                hour, data = self.__getDay(i, dt, key)
+                plt.plot(hour, data)
+        plt.savefig(filename, dpi=200)
+        plt.close()
+
+    def __graphSince(self, filename, dt, key):
+        for i in range(len(self.db)):
+            if self.__dbHasId(i):
+                hour, data = self.__getSince(i, dt, key)
                 plt.plot(hour, data)
         plt.savefig(filename, dpi=200)
         plt.close()
@@ -70,12 +97,20 @@ class throwieAnalysis:
     def graphTemp(self, dt):
         self.__graphDay(dt.strftime("graph_temp_%Y%m%d.png"), dt, 'temp')
 
+    def graphBatterySince(self, dt):
+        self.__graphSince(dt.strftime("graph_battery_since_%Y%m%d.png"), dt, 'batt')
+
+    def graphTempSince(self, dt):
+        self.__graphSince(dt.strftime("graph_temp_since_%Y%m%d.png"), dt, 'temp')
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--update', action='store_true')     
-    parser.add_argument('--loop', action='store_true')     
-    parser.add_argument('--plottoday', action='store_true')
+    parser.add_argument('--update',     action='store_true')
+    parser.add_argument('--loop',       action='store_true')
+    parser.add_argument('--plotdate',   type=str)
+    parser.add_argument('--plotsince',  type=str)
+    parser.add_argument('--plottoday',  action='store_true')
     args = vars(parser.parse_args())
 
     u = throwieAnalysis()
@@ -89,9 +124,22 @@ if __name__ == "__main__":
                 time.sleep(10)
             else:
                 break
-
-    if args['plottoday']:
+    if args['plottoday'] or \
+        (args['plotdate'] is not None) or\
+        (args['plotsince'] is not None):
         import matplotlib.pyplot as plt
         import datetime
+
+    if args['plottoday']:
         u.graphTemp(datetime.datetime.today())
         u.graphBattery(datetime.datetime.today())
+
+    if (args['plotdate'] is not None):
+        dt = datetime.datetime.strptime(args['plotdate'], '%Y%m%d')
+        u.graphTemp(dt)
+        u.graphBattery(dt)
+
+    if (args['plotsince'] is not None):
+        dt = datetime.datetime.strptime(args['plotsince'], '%Y%m%d')
+        u.graphTempSince(dt)
+        u.graphBatterySince(dt)
