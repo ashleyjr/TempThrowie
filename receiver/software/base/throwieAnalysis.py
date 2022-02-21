@@ -54,10 +54,10 @@ class throwieAnalysis:
         data = []
         hour = []
         for e in self.db[ident]:
-            if  (dt.year == e['year']) and\
-                (dt.month == e['month']) and \
-                (dt.day == e['day']):
-                hour.append(e['hour'])
+            if(dt.date() == e['datetime'].date()):
+                start = e['datetime'].replace(hour=0, minute=0, second=0)
+                h=(e['datetime']-start).total_seconds() / 3600
+                hour.append(h)
                 data.append(e[key])
         data = [x for _,x in sorted(zip(hour,data))]
         hour = sorted(hour)
@@ -67,10 +67,10 @@ class throwieAnalysis:
         data = []
         hour = []
         for e in self.db[ident]:
-            this = self.__makeDatetime(e)
-            if  this > then:
-                diff = float((this - then).total_seconds()) / 3600
-                hour.append(diff)
+            if  e['datetime'] > then:
+                h = (e['datetime'] - then).total_seconds() / 3600
+                print(h)
+                hour.append(h)
                 data.append(e[key])
         data = [x for _,x in sorted(zip(hour,data))]
         hour = sorted(hour)
@@ -80,16 +80,16 @@ class throwieAnalysis:
         for i in range(len(self.db)):
             if self.__dbHasId(i):
                 hour, data = self.__getDay(i, dt, key)
-                plt.plot(hour, data)
-        plt.savefig(filename, dpi=200)
+                plt.scatter(hour, data)
+        plt.savefig(filename, dpi=150)
         plt.close()
 
     def __graphSince(self, filename, dt, key):
         for i in range(len(self.db)):
             if self.__dbHasId(i):
                 hour, data = self.__getSince(i, dt, key)
-                plt.plot(hour, data)
-        plt.savefig(filename, dpi=200)
+                plt.scatter(hour, data)
+        plt.savefig(filename, dpi=150)
         plt.close()
 
     def graphBattery(self, dt):
