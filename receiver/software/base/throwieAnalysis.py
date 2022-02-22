@@ -122,6 +122,26 @@ class throwieAnalysis:
         plt.savefig(filename, dpi=150)
         plt.close()
 
+    def __graphRxDeltas(self, filename, then):
+        for i in range(len(self.db)):
+            if self.__dbHasId(i):
+                ds = []
+                for e in self.db[i]:
+                    if e['datetime'] > then:
+                        ds.append((e['datetime'] - then).total_seconds())
+                ds = sorted(ds)
+                d = []
+                for i in range(1,len(ds)):
+                    d.append(ds[i]-ds[i-1])
+                plt.hist(d)
+        plt.ylabel("Count")
+        plt.title("Rx Intervals")
+        plt.yscale('log')
+        plt.grid()
+        plt.xlabel("Interval (Seconds)")
+        plt.savefig(filename, dpi=150)
+        plt.close()
+
     def graphBattery(self, dt):
         self.__graphDay(dt.strftime("graph_battery_%Y%m%d.png"), dt, 'batt')
 
@@ -134,6 +154,10 @@ class throwieAnalysis:
     def graphTempSince(self, dt):
         self.__graphSince(dt.strftime("graph_temp_since_%Y%m%d.png"), dt, 'temp')
 
+    def graphRxDeltasSince(self, dt):
+        self.__graphRxDeltas(dt.strftime("graph_deltas_since_%Y%m%d.png"), dt)
+
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -141,6 +165,7 @@ if __name__ == "__main__":
     parser.add_argument('--loop',       action='store_true')
     parser.add_argument('--plotdate',   type=str)
     parser.add_argument('--plotsince',  type=str)
+    parser.add_argument('--plotdeltas',  type=str)
     parser.add_argument('--plottoday',  action='store_true')
     args = vars(parser.parse_args())
 
@@ -156,6 +181,7 @@ if __name__ == "__main__":
             else:
                 break
     if args['plottoday'] or \
+        (args['plotdeltas'] is not None) or\
         (args['plotdate'] is not None) or\
         (args['plotsince'] is not None):
         import matplotlib.pyplot as plt
@@ -164,6 +190,10 @@ if __name__ == "__main__":
     if args['plottoday']:
         u.graphTemp(datetime.datetime.today())
         u.graphBattery(datetime.datetime.today())
+
+    if args['plotdeltas']:
+        dt = datetime.datetime.strptime(args['plotdeltas'], '%Y%m%d')
+        u.graphRxDeltasSince(dt)
 
     if (args['plotdate'] is not None):
         dt = datetime.datetime.strptime(args['plotdate'], '%Y%m%d')
