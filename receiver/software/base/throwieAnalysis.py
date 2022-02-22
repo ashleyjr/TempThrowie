@@ -69,26 +69,56 @@ class throwieAnalysis:
         for e in self.db[ident]:
             if  e['datetime'] > then:
                 h = (e['datetime'] - then).total_seconds() / 3600
-                print(h)
                 hour.append(h)
                 data.append(e[key])
         data = [x for _,x in sorted(zip(hour,data))]
         hour = sorted(hour)
-        return hour, data
+        time = []
+        if max(hour) > 24:
+            for h in hour:
+                time.append(h/24)
+        else:
+            time = hour
+        return time, data
 
     def __graphDay(self, filename, dt, key):
         for i in range(len(self.db)):
             if self.__dbHasId(i):
                 hour, data = self.__getDay(i, dt, key)
                 plt.scatter(hour, data)
+        if key == 'batt':
+            plt.ylabel("Voltage (V)")
+            plt.title("Battery Voltage")
+        else:
+            plt.ylabel("Temperature (C)")
+            plt.title("Temperature")
+        plt.grid()
+        plt.xticks(np.arange(0, 24, 1))
+        plt.xlabel("Time (Hours)")
         plt.savefig(filename, dpi=150)
         plt.close()
 
     def __graphSince(self, filename, dt, key):
+        m = 0
         for i in range(len(self.db)):
             if self.__dbHasId(i):
-                hour, data = self.__getSince(i, dt, key)
-                plt.scatter(hour, data)
+                time, data = self.__getSince(i, dt, key)
+                plt.scatter(time, data)
+                if max(time) > m:
+                    m = max(time)
+        if key == 'batt':
+            plt.ylabel("Voltage (V)")
+            plt.title("Battery Voltage")
+        else:
+            plt.ylabel("Temperature (C)")
+            plt.title("Temperature")
+        if (datetime.datetime.now() - dt).total_seconds() > (24*60*60):
+            plt.xlabel("Time (Days)")
+            plt.xticks(np.arange(0, math.ceil(m)+0.25, 0.25))
+        else:
+            plt.xticks(np.arange(0, 24, 1))
+            plt.xlabel("Time (Hours)")
+        plt.grid()
         plt.savefig(filename, dpi=150)
         plt.close()
 
@@ -129,6 +159,7 @@ if __name__ == "__main__":
         (args['plotdate'] is not None) or\
         (args['plotsince'] is not None):
         import matplotlib.pyplot as plt
+        import numpy as np
 
     if args['plottoday']:
         u.graphTemp(datetime.datetime.today())
