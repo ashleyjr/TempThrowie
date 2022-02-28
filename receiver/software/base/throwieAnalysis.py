@@ -5,6 +5,7 @@ import os
 import argparse
 import math
 import datetime
+import sqlite3
 
 class throwieAnalysis:
 
@@ -13,52 +14,40 @@ class throwieAnalysis:
         Open DB if it exists or create
         a new one
         """
-        if os.path.isfile(cnsts.DBNAME):
-            with open(cnsts.DBNAME, 'rb') as f:
-                self.db = pickle.load(f)
-        else:
-            self.db = []
-            for i in range(cnsts.MAX_THROWIES):
-                self.db.append([])
+        con = sqlite3.connect(cnsts.DBNAME)
+        self.__cur = con.cursor()
 
-    def writeDb(self):
-        """
-        Write DB
-        """
-        with open(cnsts.DBNAME, 'wb') as f:
-            pickle.dump(self.db, f)
+    def getUniqueIds(self):
+        cmd = f"SELECT DISTINCT id FROM throwie"
+        self.__cur.execute(cmd)
+        ids = []
+        for row in self.__cur.fetchall():
+            ids.append(int(row[0]))
+        return sorted(ids)
 
-    def addLogs(self):
-        """
-        Inspect each log file and add to db
-        """
-        logs = glob.glob(cnsts.LOGS)
-        for l in logs:
-            with open(l, 'r') as f:
-                try:
-                    rx = f.read()
-                    dt = datetime.datetime.strptime(cnsts.pathDateTime(l), '%Y%m%d_%H%M%S')
-                    self.db[cnsts.rxToId(rx)].append({
-                        'datetime' : dt,
-                        'temp' : cnsts.rxToTemp(rx),
-                        'batt' : cnsts.rxToBattery(rx)
-                    })
-                except:
-                    print(f"Log file{l} corrupt")
-            os.remove(l)
+    def getIds(self, idet):
+        cmd = f"SELECT * FROM throwie WHERE id='{idet}'"
+        self.__cur.execute(cmd)
+        return self.__cur.fetchall()
 
-    def __dbHasId(self, ident):
-        return len(self.db[ident]) > 0
+    def numIds(self, idet):
+        return len(self.getIds(idet))
 
-    def __getDay(self, ident, dt, key):
+    def hasId(self, idet):
+        return self.numIds() > 0
+
+    def __getDay(self, idet, dt, key):
         data = []
         hour = []
-        for e in self.db[ident]:
-            if(dt.date() == e['datetime'].date()):
-                start = e['datetime'].replace(hour=0, minute=0, second=0)
-                h=(e['datetime']-start).total_seconds() / 3600
-                hour.append(h)
-                data.append(e[key])
+        dt_str = dt.strftime("%Y%m%d")
+        cmd = f"SELECT time, {key} FROM throwie WHERE date='{dt_str}' AND id='{idet}'"
+        self.__cur.execute(cmd)
+        for t, k in self.__cur.fetchall():
+            then = datetime.datetime.strptime(str(t), '%H%M%S')
+            start = then.replace(hour=0, minute=0, second=0)
+            h=(then-start).total_seconds() / 3600
+            hour.append(h)
+            data.append(k)
         data = [x for _,x in sorted(zip(hour,data))]
         hour = sorted(hour)
         return hour, data
@@ -82,10 +71,9 @@ class throwieAnalysis:
         return time, data
 
     def __graphDay(self, filename, dt, key):
-        for i in range(len(self.db)):
-            if self.__dbHasId(i):
-                hour, data = self.__getDay(i, dt, key)
-                plt.scatter(hour, data)
+        for i in self.getUniqueIds():
+            hour, data = self.__getDay(i, dt, key)
+            plt.scatter(hour, data)
         if key == 'batt':
             plt.ylabel("Voltage (V)")
             plt.title("Battery Voltage")
@@ -170,6 +158,7 @@ if __name__ == "__main__":
     args = vars(parser.parse_args())
 
     u = throwieAnalysis()
+    print(u.numIds(77))
 
     if args['update']:
         while True:
