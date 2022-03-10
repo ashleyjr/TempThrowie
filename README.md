@@ -6,12 +6,23 @@
    - SimplicityStudio_v4 flash8051
    - Silicon Labs 8-Bit USB Debug Adapter
 
-## Basestation
+## Basestation (Raspberry Pi)
 
    - Basestation is a Raspberry Pi Model B Plus Rev 1.2
    - Fresh install of Raspbian GNU/Linux 11 (bullseye)
    - pip install matplotlib
    - sudo apt-get install libatlas-base-dev
+
+## Basestation (Laptop)
+
+   - MacBook Pro 2019
+   - Virtual Box Virtual Machine
+   - Ubuntu 20.04.4 LTS
+   - sudo update-alternatives --install /usr/bin/python python /usr/bin/python3 10
+   - sudo apt-get install python3-pip
+   - python -m pip install pyserial 
+   - python -m pip install matplotlib
+   - sudo apt install imagemagick-6.q16
 
 # TempThrowie: Spec
 
