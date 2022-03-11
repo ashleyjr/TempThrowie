@@ -12,6 +12,9 @@
    - Fresh install of Raspbian GNU/Linux 11 (bullseye)
    - pip install matplotlib
    - sudo apt-get install libatlas-base-dev
+   - pip install numpy --upgrade
+   - sudo apt install apache2 -y
+   - sudo apt-get install php libapache2-mod-php -y
 
 ## Basestation (Laptop)
 
