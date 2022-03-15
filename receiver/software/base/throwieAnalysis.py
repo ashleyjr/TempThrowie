@@ -130,17 +130,17 @@ class throwieAnalysis:
         plt.savefig(filename, dpi=150)
         plt.close()
 
-    def graphBattery(self, dt):
-        self.__graphDay(dt.strftime("graph_battery_%Y%m%d.png"), dt, 'batt')
+    def graphBattery(self, out, dt):
+        self.__graphDay(out, dt, 'batt')
 
-    def graphTemp(self, dt):
-        self.__graphDay(dt.strftime("graph_temp_%Y%m%d.png"), dt, 'temp')
+    def graphTemp(self, out, dt):
+        self.__graphDay(out, dt, 'temp')
 
     def graphBatterySince(self, dt):
         self.__graphSince(dt.strftime("graph_battery_since_%Y%m%d.png"), dt, 'batt')
 
     def graphTempSince(self, dt):
-        self.__graphSince(dt.strftime("graph_temp_since_%Y%m%d.png"), dt, 'temp')
+        self.__graphSince(out, dt, 'temp')
 
     def graphRxDeltasSince(self, dt):
         self.__graphRxDeltas(dt.strftime("graph_deltas_since_%Y%m%d.png"), dt)
@@ -149,36 +149,32 @@ class throwieAnalysis:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--update',     action='store_true')
-    parser.add_argument('--loop',       action='store_true')
-    parser.add_argument('--plotdate',   type=str)
-    parser.add_argument('--plotsince',  type=str)
-    parser.add_argument('--plotdeltas',  type=str)
-    parser.add_argument('--plottoday',  action='store_true')
+    parser.add_argument('--plotdate',       type=str)
+    parser.add_argument('--plotsince',      type=str)
+    parser.add_argument('--plotdeltas',     type=str)
+    parser.add_argument('--plottemptoday',  action='store_true')
+    parser.add_argument('--plotbatttoday',  action='store_true')
+    parser.add_argument('--out',            type=str)
+
     args = vars(parser.parse_args())
 
     u = throwieAnalysis()
-    print(u.numIds(77))
 
-    if args['update']:
-        while True:
-            u.addLogs()
-            u.writeDb()
-            if args['loop']:
-                import time
-                time.sleep(10)
-            else:
-                break
-    if args['plottoday'] or \
+    out = args['out']
+
+    if args['plotbatttoday'] or \
+        args['plottemptoday'] or \
         (args['plotdeltas'] is not None) or\
         (args['plotdate'] is not None) or\
         (args['plotsince'] is not None):
         import matplotlib.pyplot as plt
         import numpy as np
 
-    if args['plottoday']:
-        u.graphTemp(datetime.datetime.today())
-        u.graphBattery(datetime.datetime.today())
+    if args['plottemptoday']:
+        u.graphTemp(out, datetime.datetime.today())
+    
+    if args['plotbatttoday']:
+        u.graphBattery(out, datetime.datetime.today())
 
     if args['plotdeltas']:
         dt = datetime.datetime.strptime(args['plotdeltas'], '%Y%m%d')

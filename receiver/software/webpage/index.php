@@ -1,1 +1,2 @@
-<img src="graph_battery_20220311.png">
+<img src="temptoday.png">
+<img src="batttoday.png">
