@@ -6,6 +6,7 @@ import argparse
 import math
 import datetime
 import sqlite3
+import logging
 
 class throwieAnalysis:
 
@@ -14,8 +15,23 @@ class throwieAnalysis:
         Open DB if it exists or create
         a new one
         """
+        self.__start = datetime.datetime.now()
         con = sqlite3.connect(cnsts.DBNAME)
         self.__cur = con.cursor()
+
+    def initLog(self, logname):
+        self.__logger = logging.getLogger(logname)
+        self.__logger.setLevel(logging.DEBUG)
+        fh = logging.FileHandler(logname, mode='w')
+        fmt = logging.Formatter('[%(asctime)s] : %(message)s')
+        fh.setFormatter(fmt)
+        self.__logger.addHandler(fh)
+        self.__logger.info(f"Start")
+    
+    def endLog(self):
+        delta = datetime.datetime.now() - self.__start
+        self.__logger.info(f"Elapsed {delta.total_seconds()}s")
+        self.__logger.info(f"End")
 
     def getUniqueIds(self):
         cmd = f"SELECT DISTINCT id FROM throwie"
@@ -155,10 +171,13 @@ if __name__ == "__main__":
     parser.add_argument('--plottemptoday',  action='store_true')
     parser.add_argument('--plotbatttoday',  action='store_true')
     parser.add_argument('--out',            type=str)
+    parser.add_argument('--log',            type=str)
 
     args = vars(parser.parse_args())
 
     u = throwieAnalysis()
+    
+    u.initLog(f"{args['log'].replace('.log','')}.log")
 
     out = args['out']
 
@@ -189,3 +208,6 @@ if __name__ == "__main__":
         dt = datetime.datetime.strptime(args['plotsince'], '%Y%m%d')
         u.graphTempSince(dt)
         u.graphBatterySince(dt)
+
+    u.endLog()
+
