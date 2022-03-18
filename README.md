@@ -14,7 +14,28 @@
    - sudo apt-get install libatlas-base-dev
    - pip install numpy --upgrade
    - sudo apt install apache2 -y
-   - sudo apt-get install php libapache2-mod-php -y
+   - sudo apt-get install php libapache2-mod-php 
+   - Config:
+
+```
+(21:10 pi@raspberrypi ~) > crontab -l | tail -n 1
+00,15,30,45 * * * * cd /home/pi/TempThrowie/receiver/software/base/; python throwieAnalysis.py --plotbatttoday --out ../webpage/batttoday.png --log batttoday.log; python throwieAnalysis.py --plottemptoday --out ../webpage/temptoday.png --log temptoday.log
+(21:10 pi@raspberrypi ~) > tail -n 5 /etc/rc.local 
+
+# Run TempThrowie UART monitor
+cd /home/pi/TempThrowie/receiver/software/base; python throwieLogging.py &
+
+exit 0
+(21:10 pi@raspberrypi ~) > cat /etc/apache2/sites-available/000-default.conf | grep DocumentRoot
+	DocumentRoot /home/pi/TempThrowie/receiver/software/webpage/
+(21:10 pi@raspberrypi ~) > cat /etc/apache2/apache2.conf | grep TempThrowie -A4
+<Directory /home/pi/TempThrowie/receiver/software/webpage/>
+	Options Indexes FollowSymLinks
+	AllowOverride None
+	Require all granted
+</Directory>
+(21:10 pi@raspberrypi ~) > 
+```
 
 ## Basestation (Laptop)
 
