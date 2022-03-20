@@ -21,8 +21,8 @@
 (21:10 pi@raspberrypi ~) > crontab -l | tail -n 1
 00,15,30,45 * * * * cd /home/pi/TempThrowie/receiver/software/base/; python throwieAnalysis.py --plotbatttoday --out ../webpage/batttoday.png --log batttoday.log; python throwieAnalysis.py --plottemptoday --out ../webpage/temptoday.png --log temptoday.log
 (21:10 pi@raspberrypi ~) > tail -n 5 /etc/rc.local 
-
 # Run TempThrowie UART monitor
+rm /home/pi/TempThrowie/receiver/software/base/throwie.db
 cd /home/pi/TempThrowie/receiver/software/base; python throwieLogging.py &
 
 exit 0
