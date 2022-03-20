@@ -32,6 +32,15 @@ class throwieAnalysis:
         delta = datetime.datetime.now() - self.__start
         self.__logger.info(f"Elapsed {delta.total_seconds()}s")
         self.__logger.info(f"End")
+ 
+    def logStats(self):
+        self.__logger.info(f"Unique IDs : {self.getUniqueIds()}")
+        date = self.getFirstDate()
+        time = self.getFirstTime(date)
+        self.__logger.info(f"First Rx : Date = {date}, Time = {time}")
+        date = self.getLastDate()
+        time = self.getLastTime(date)
+        self.__logger.info(f"Last Rx  : Date = {date}, Time = {time}")
 
     def getUniqueIds(self):
         cmd = f"SELECT DISTINCT id FROM throwie"
@@ -51,6 +60,34 @@ class throwieAnalysis:
 
     def hasId(self, idet):
         return self.numIds() > 0
+    
+    def getUniqueDates(self):
+        cmd = f"SELECT DISTINCT date FROM throwie"
+        self.__cur.execute(cmd)
+        dates = []
+        for row in self.__cur.fetchall():
+            dates.append(int(row[0]))
+        return sorted(dates)
+     
+    def getFirstDate(self):
+        return self.getUniqueDates()[0]
+
+    def getLastDate(self):
+        return self.getUniqueDates()[-1]
+    
+    def getTimes(self, date):
+        cmd = f"SELECT time FROM throwie WHERE date='{date}'"
+        self.__cur.execute(cmd)
+        times = []
+        for row in self.__cur.fetchall():
+            times.append(int(row[0]))
+        return sorted(times)
+     
+    def getLastTime(self, date):
+        return self.getTimes(date)[-1]  
+
+    def getFirstTime(self, date):
+        return self.getTimes(date)[0]  
 
     def __getDay(self, idet, dt, key):
         data = []
@@ -168,6 +205,7 @@ if __name__ == "__main__":
     parser.add_argument('--plotdate',       type=str)
     parser.add_argument('--plotsince',      type=str)
     parser.add_argument('--plotdeltas',     type=str)
+    parser.add_argument('--stats',          action='store_true')
     parser.add_argument('--plottemptoday',  action='store_true')
     parser.add_argument('--plotbatttoday',  action='store_true')
     parser.add_argument('--out',            type=str)
@@ -188,6 +226,9 @@ if __name__ == "__main__":
         (args['plotsince'] is not None):
         import matplotlib.pyplot as plt
         import numpy as np
+
+    if args['stats']:
+        u.logStats()
 
     if args['plottemptoday']:
         u.graphTemp(out, datetime.datetime.today())
