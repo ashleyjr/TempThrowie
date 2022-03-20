@@ -134,8 +134,9 @@ class throwieAnalysis:
             plt.ylabel("Temperature (C)")
             plt.title("Temperature")
         plt.grid()
-        plt.xticks(np.arange(0, 25, 1))
+        plt.xticks(range(0, 25))
         plt.xlabel("Time (Hours)")
+        plt.gca().invert_yaxis()
         plt.savefig(filename, dpi=150)
         plt.close()
 
