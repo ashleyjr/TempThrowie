@@ -134,7 +134,7 @@ class throwieAnalysis:
             plt.ylabel("Temperature (C)")
             plt.title("Temperature")
         plt.grid()
-        plt.xticks(np.arange(0, 24, 1))
+        plt.xticks(np.arange(0, 25, 1))
         plt.xlabel("Time (Hours)")
         plt.savefig(filename, dpi=150)
         plt.close()
@@ -157,7 +157,7 @@ class throwieAnalysis:
             plt.xlabel("Time (Days)")
             plt.xticks(np.arange(0, math.ceil(m)+0.25, 0.25))
         else:
-            plt.xticks(np.arange(0, 24, 1))
+            plt.xticks(np.arange(0, 25, 1))
             plt.xlabel("Time (Hours)")
         plt.grid()
         plt.savefig(filename, dpi=150)
