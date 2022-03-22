@@ -100,7 +100,7 @@ class throwieAnalysis:
             start = then.replace(hour=0, minute=0, second=0)
             h=(then-start).total_seconds() / 3600
             hour.append(h)
-            data.append(k)
+            data.append(float(k))
         data = [x for _,x in sorted(zip(hour,data))]
         hour = sorted(hour)
         return hour, data
@@ -136,7 +136,6 @@ class throwieAnalysis:
         plt.grid()
         plt.xticks(range(0, 25))
         plt.xlabel("Time (Hours)")
-        plt.gca().invert_yaxis()
         plt.savefig(filename, dpi=150)
         plt.close()
 
