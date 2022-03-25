@@ -29,7 +29,7 @@ cork_length   = 34
 cork_width    = 5
 cork_depth    = 8.5
 cork_length_offset   = 1.75
-cork_width_offset   = 2
+cork_width_offset   = 16
 
 
 # Name
