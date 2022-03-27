@@ -19,7 +19,7 @@
 
 ```
 (21:10 pi@raspberrypi ~) > crontab -l | tail -n 1
-*/10 * * * * cd /home/pi/TempThrowie/receiver/software/base/; python throwieAnalysis.py --stats --log stats.log; python throwieAnalysis.py --plotbatttoday --out ../webpage/batttoday.png --log batttoday.log; python throwieAnalysis.py --plottemptoday --out ../webpage/temptoday.png --log temptoday.log
+*/20 * * * * cd /home/pi/TempThrowie/receiver/software/base/; python throwieAnalysis.py --stats --log stats.log; python throwieAnalysis.py --plotbatttoday --out ../webpage/batttoday.png --log batttoday.log; python throwieAnalysis.py --plottemptoday --out ../webpage/temptoday.png --log temptoday.log; python throwieAnalysis.py --plotbattweek --out ../webpage/battweek.png --log battweek.log; python throwieAnalysis.py --plottempweek --out ../webpage/tempweek.png --log tempweek.log
 (21:10 pi@raspberrypi ~) > tail -n 5 /etc/rc.local 
 # Run TempThrowie UART monitor
 rm /home/pi/TempThrowie/receiver/software/base/throwie.db
