@@ -19,6 +19,9 @@ class throwieAnalysis:
         con = sqlite3.connect(cnsts.DBNAME)
         self.__cur = con.cursor()
 
+    def __getDateStr(self, dt):
+        return dt.strftime("%Y%m%d")
+
     def initLog(self, logname):
         self.__logger = logging.getLogger(logname)
         self.__logger.setLevel(logging.DEBUG)
@@ -27,12 +30,12 @@ class throwieAnalysis:
         fh.setFormatter(fmt)
         self.__logger.addHandler(fh)
         self.__logger.info(f"Start")
-    
+
     def endLog(self):
         delta = datetime.datetime.now() - self.__start
         self.__logger.info(f"Elapsed {delta.total_seconds()}s")
         self.__logger.info(f"End")
- 
+
     def logStats(self):
         self.__logger.info(f"Unique IDs : {self.getUniqueIds()}")
         date = self.getFirstDate()
@@ -60,7 +63,7 @@ class throwieAnalysis:
 
     def hasId(self, idet):
         return self.numIds() > 0
-    
+
     def getUniqueDates(self):
         cmd = f"SELECT DISTINCT date FROM throwie"
         self.__cur.execute(cmd)
@@ -68,13 +71,13 @@ class throwieAnalysis:
         for row in self.__cur.fetchall():
             dates.append(int(row[0]))
         return sorted(dates)
-     
+
     def getFirstDate(self):
         return self.getUniqueDates()[0]
 
     def getLastDate(self):
         return self.getUniqueDates()[-1]
-    
+
     def getTimes(self, date):
         cmd = f"SELECT time FROM throwie WHERE date='{date}'"
         self.__cur.execute(cmd)
@@ -82,17 +85,17 @@ class throwieAnalysis:
         for row in self.__cur.fetchall():
             times.append(int(row[0]))
         return sorted(times)
-     
+
     def getLastTime(self, date):
-        return self.getTimes(date)[-1]  
+        return self.getTimes(date)[-1]
 
     def getFirstTime(self, date):
-        return self.getTimes(date)[0]  
+        return self.getTimes(date)[0]
 
     def __getDay(self, idet, dt, key):
         data = []
         hour = []
-        dt_str = dt.strftime("%Y%m%d")
+        dt_str = self.__getDateStr(dt)
         cmd = f"SELECT time, {key} FROM throwie WHERE date='{dt_str}' AND id='{idet}'"
         self.__cur.execute(cmd)
         for t, k in self.__cur.fetchall():
@@ -129,10 +132,10 @@ class throwieAnalysis:
             plt.scatter(hour, data)
         if key == 'batt':
             plt.ylabel("Voltage (V)")
-            plt.title("Battery Voltage")
+            plt.title(f"Battery Voltage {self.__getDateStr(dt)}")
         else:
             plt.ylabel("Temperature (C)")
-            plt.title("Temperature")
+            plt.title(f"Temperature {self.__getDateStr(dt)}")
         plt.grid()
         plt.xticks(range(0, 25))
         plt.xlabel("Time (Hours)")
@@ -208,13 +211,13 @@ if __name__ == "__main__":
     parser.add_argument('--stats',          action='store_true')
     parser.add_argument('--plottemptoday',  action='store_true')
     parser.add_argument('--plotbatttoday',  action='store_true')
-    parser.add_argument('--out',            type=str)
-    parser.add_argument('--log',            type=str)
+    parser.add_argument('--out',            required=True, type=str)
+    parser.add_argument('--log',            required=True,   type=str)
 
     args = vars(parser.parse_args())
 
     u = throwieAnalysis()
-    
+
     u.initLog(f"{args['log'].replace('.log','')}.log")
 
     out = args['out']
@@ -232,7 +235,7 @@ if __name__ == "__main__":
 
     if args['plottemptoday']:
         u.graphTemp(out, datetime.datetime.today())
-    
+
     if args['plotbatttoday']:
         u.graphBattery(out, datetime.datetime.today())
 
