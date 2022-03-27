@@ -108,6 +108,25 @@ class throwieAnalysis:
         hour = sorted(hour)
         return hour, data
 
+    def __getWeek(self, idet, dt, key):
+        data = []
+        hour = []
+        dt.replace(hour=0, minute=0, second=0)
+        for day in range(7):
+            dt_str = self.__getDateStr(dt + datetime.timedelta(days=day))
+            print(dt_str)
+            cmd = f"SELECT time, {key} FROM throwie WHERE date='{dt_str}' AND id='{idet}'"
+            self.__cur.execute(cmd)
+            for t, k in self.__cur.fetchall():
+                then = datetime.datetime.strptime(str(t), '%H%M%S')
+                start = then.replace(hour=0, minute=0, second=0)
+                h=(then-start).total_seconds() / 3600
+                hour.append(h+ (day * 24))
+                data.append(float(k))
+            data = [x for _,x in sorted(zip(hour,data))]
+            hour = sorted(hour)
+        return hour, data
+
     def __getSince(self, ident, then, key):
         data = []
         hour = []
@@ -138,6 +157,22 @@ class throwieAnalysis:
             plt.title(f"Temperature {self.__getDateStr(dt)}")
         plt.grid()
         plt.xticks(range(0, 25))
+        plt.xlabel("Time (Hours)")
+        plt.savefig(filename, dpi=150)
+        plt.close()
+
+    def __graphWeek(self, filename, dt, key):
+        for i in self.getUniqueIds():
+            hour, data = self.__getWeek(i, dt, key)
+            plt.scatter(hour, data)
+        if key == 'batt':
+            plt.ylabel("Voltage (V)")
+            plt.title(f"Battery Voltage {self.__getDateStr(dt)}")
+        else:
+            plt.ylabel("Temperature (C)")
+            plt.title(f"Temperature {self.__getDateStr(dt)}")
+        plt.grid()
+        plt.xticks(range(0, ((24*7)+1), 24))
         plt.xlabel("Time (Hours)")
         plt.savefig(filename, dpi=150)
         plt.close()
@@ -186,11 +221,17 @@ class throwieAnalysis:
         plt.savefig(filename, dpi=150)
         plt.close()
 
-    def graphBattery(self, out, dt):
+    def graphBattToday(self, out, dt):
         self.__graphDay(out, dt, 'batt')
 
-    def graphTemp(self, out, dt):
+    def graphBattWeek(self, out, dt):
+        self.__graphWeek(out, dt, 'batt')
+
+    def graphTempToday(self, out, dt):
         self.__graphDay(out, dt, 'temp')
+
+    def graphTempWeek(self, out, dt):
+        self.__graphWeek(out, dt, 'temp')
 
     def graphBatterySince(self, dt):
         self.__graphSince(dt.strftime("graph_battery_since_%Y%m%d.png"), dt, 'batt')
@@ -210,7 +251,9 @@ if __name__ == "__main__":
     parser.add_argument('--plotdeltas',     type=str)
     parser.add_argument('--stats',          action='store_true')
     parser.add_argument('--plottemptoday',  action='store_true')
+    parser.add_argument('--plottempweek',   action='store_true')
     parser.add_argument('--plotbatttoday',  action='store_true')
+    parser.add_argument('--plotbattweek',   action='store_true')
     parser.add_argument('--out',            required=True, type=str)
     parser.add_argument('--log',            required=True,   type=str)
 
@@ -223,7 +266,9 @@ if __name__ == "__main__":
     out = args['out']
 
     if args['plotbatttoday'] or \
+        args['plotbattweek'] or \
         args['plottemptoday'] or \
+        args['plottempweek'] or \
         (args['plotdeltas'] is not None) or\
         (args['plotdate'] is not None) or\
         (args['plotsince'] is not None):
@@ -234,10 +279,18 @@ if __name__ == "__main__":
         u.logStats()
 
     if args['plottemptoday']:
-        u.graphTemp(out, datetime.datetime.today())
+        u.graphTempToday(out, datetime.datetime.today())
+
+    if args['plottempweek']:
+        start = datetime.datetime.today() - datetime.timedelta(days=7)
+        u.graphTempWeek(out, start)
 
     if args['plotbatttoday']:
-        u.graphBattery(out, datetime.datetime.today())
+        u.graphBattToday(out, datetime.datetime.today())
+
+    if args['plotbattweek']:
+        start = datetime.datetime.today() - datetime.timedelta(days=7)
+        u.graphBattWeek(out, start)
 
     if args['plotdeltas']:
         dt = datetime.datetime.strptime(args['plotdeltas'], '%Y%m%d')
