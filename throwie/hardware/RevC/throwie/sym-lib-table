@@ -1,0 +1,4 @@
+(sym_lib_table
+  (lib (name throwie)(type Legacy)(uri ${KIPRJMOD}/throwie.lib)(options "")(descr ""))
+  (lib (name power)(type Legacy)(uri ${KIPRJMOD}/power.lib)(options "")(descr ""))
+)
