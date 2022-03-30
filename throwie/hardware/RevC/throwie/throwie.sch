@@ -491,7 +491,7 @@ Connection ~ 6600 3950
 Wire Wire Line
 	6250 3050 6600 3050
 Connection ~ 6600 3050
-Text Label 1200 3800 0    50   ~ 0
+Text Label 1400 3800 0    50   ~ 0
 MOD
 Text Label 1250 3300 0    50   ~ 0
 0.471
@@ -552,8 +552,6 @@ Wire Wire Line
 	1050 1300 1050 1250
 Wire Wire Line
 	1050 1800 1050 1750
-Wire Wire Line
-	1800 3800 1200 3800
 $Comp
 L throwie:CAP_0603 C6
 U 1 1 616743C5
@@ -639,4 +637,127 @@ Wire Wire Line
 	1800 3300 1250 3300
 NoConn ~ 1800 4400
 NoConn ~ 300  800 
+$Comp
+L power:GNDREF #PWR0117
+U 1 1 62450E6E
+P 7950 2200
+F 0 "#PWR0117" H 7950 1950 50  0001 C CNN
+F 1 "GNDREF" H 7955 2027 50  0000 C CNN
+F 2 "" H 7950 2200 50  0001 C CNN
+F 3 "" H 7950 2200 50  0001 C CNN
+	1    7950 2200
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:+3.3V #PWR0118
+U 1 1 62453602
+P 8400 1400
+F 0 "#PWR0118" H 8400 1250 50  0001 C CNN
+F 1 "+3.3V" H 8415 1573 50  0000 C CNN
+F 2 "" H 8400 1400 50  0001 C CNN
+F 3 "" H 8400 1400 50  0001 C CNN
+	1    8400 1400
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:+BATT #PWR0119
+U 1 1 62453A01
+P 7950 1400
+F 0 "#PWR0119" H 7950 1250 50  0001 C CNN
+F 1 "+BATT" H 7965 1573 50  0000 C CNN
+F 2 "" H 7950 1400 50  0001 C CNN
+F 3 "" H 7950 1400 50  0001 C CNN
+	1    7950 1400
+	1    0    0    -1  
+$EndComp
+$Comp
+L throwie:TestPoints T5
+U 1 1 62455406
+P 1250 3800
+F 0 "T5" H 1500 3800 50  0000 C CNN
+F 1 "TestPoints" H 1150 3550 50  0001 C CNN
+F 2 "throwie:TestPoint" H 1250 3800 50  0001 C CNN
+F 3 "" H 1250 3800 50  0001 C CNN
+	1    1250 3800
+	-1   0    0    1   
+$EndComp
+Wire Wire Line
+	1800 3800 1250 3800
+$Comp
+L throwie:TestPoints T9
+U 1 1 6245B4E4
+P 7850 1950
+F 0 "T9" H 8100 1950 50  0000 C CNN
+F 1 "TestPoints" H 7750 1700 50  0001 C CNN
+F 2 "throwie:TestPoint" H 7850 1950 50  0001 C CNN
+F 3 "" H 7850 1950 50  0001 C CNN
+	1    7850 1950
+	-1   0    0    1   
+$EndComp
+$Comp
+L throwie:TestPoints T8
+U 1 1 6245CE73
+P 7850 1800
+F 0 "T8" H 8100 1800 50  0000 C CNN
+F 1 "TestPoints" H 7750 1550 50  0001 C CNN
+F 2 "throwie:TestPoint" H 7850 1800 50  0001 C CNN
+F 3 "" H 7850 1800 50  0001 C CNN
+	1    7850 1800
+	-1   0    0    1   
+$EndComp
+$Comp
+L throwie:TestPoints T7
+U 1 1 6245D151
+P 7850 1650
+F 0 "T7" H 8100 1650 50  0000 C CNN
+F 1 "TestPoints" H 7750 1400 50  0001 C CNN
+F 2 "throwie:TestPoint" H 7850 1650 50  0001 C CNN
+F 3 "" H 7850 1650 50  0001 C CNN
+	1    7850 1650
+	-1   0    0    1   
+$EndComp
+$Comp
+L throwie:TestPoints T6
+U 1 1 6245D2AC
+P 7850 1500
+F 0 "T6" H 8100 1500 50  0000 C CNN
+F 1 "TestPoints" H 7750 1250 50  0001 C CNN
+F 2 "throwie:TestPoint" H 7850 1500 50  0001 C CNN
+F 3 "" H 7850 1500 50  0001 C CNN
+	1    7850 1500
+	-1   0    0    1   
+$EndComp
+Wire Wire Line
+	7950 1400 7950 1500
+Wire Wire Line
+	7950 1500 7850 1500
+Wire Wire Line
+	7850 1650 8400 1650
+Wire Wire Line
+	8400 1650 8400 1400
+Wire Wire Line
+	7850 1800 7950 1800
+Wire Wire Line
+	7950 1800 7950 1950
+Wire Wire Line
+	7850 1950 7950 1950
+Connection ~ 7950 1950
+$Comp
+L throwie:TestPoints T0
+U 1 1 624758B1
+P 7850 2100
+F 0 "T0" H 8100 2100 50  0000 C CNN
+F 1 "TestPoints" H 7750 1850 50  0001 C CNN
+F 2 "throwie:TestPoint" H 7850 2100 50  0001 C CNN
+F 3 "" H 7850 2100 50  0001 C CNN
+	1    7850 2100
+	-1   0    0    1   
+$EndComp
+Wire Wire Line
+	7950 1950 7950 2100
+Wire Wire Line
+	7850 2100 7950 2100
+Connection ~ 7950 2100
+Wire Wire Line
+	7950 2100 7950 2200
 $EndSCHEMATC
