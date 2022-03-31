@@ -3,7 +3,7 @@
   (general
     (thickness 1.6)
     (drawings 40)
-    (tracks 290)
+    (tracks 292)
     (zones 0)
     (modules 30)
     (nets 33)
@@ -17,8 +17,8 @@
     (33 F.Adhes user hide)
     (34 B.Paste user hide)
     (35 F.Paste user hide)
-    (36 B.SilkS user hide)
-    (37 F.SilkS user)
+    (36 B.SilkS user)
+    (37 F.SilkS user hide)
     (38 B.Mask user hide)
     (39 F.Mask user hide)
     (40 Dwgs.User user hide)
@@ -271,16 +271,16 @@
       (net 2 GNDREF))
   )
 
-  (module throwie:TestPoint (layer F.Cu) (tedit 615734C8) (tstamp 6244D0A0)
-    (at 30.988 147.32)
+  (module throwie:TestPoint (layer B.Cu) (tedit 615734C8) (tstamp 6244D0A0)
+    (at 47.54372 160.8836)
     (path /6245B4E4)
-    (fp_text reference T9 (at 0 0.5) (layer F.SilkS) hide
-      (effects (font (size 1 1) (thickness 0.15)))
+    (fp_text reference T9 (at 0 -0.5) (layer B.SilkS) hide
+      (effects (font (size 1 1) (thickness 0.15)) (justify mirror))
     )
-    (fp_text value TestPoints (at 0 -0.5) (layer F.Fab) hide
-      (effects (font (size 1 1) (thickness 0.15)))
+    (fp_text value TestPoints (at 0 0.5) (layer B.Fab) hide
+      (effects (font (size 1 1) (thickness 0.15)) (justify mirror))
     )
-    (pad 1 smd circle (at 0 0) (size 2 2) (layers F.Cu F.Paste F.Mask)
+    (pad 1 smd circle (at 0 0) (size 2 2) (layers B.Cu B.Paste B.Mask)
       (net 2 GNDREF))
   )
 
@@ -690,7 +690,7 @@
   (gr_text 8 (at 24.13 159.512) (layer F.SilkS)
     (effects (font (size 1 1) (thickness 0.15)))
   )
-  (gr_text 9 (at 32.258 148.59) (layer F.SilkS)
+  (gr_text 9 (at 46.16704 162.02152) (layer B.SilkS)
     (effects (font (size 1 1) (thickness 0.15)))
   )
   (gr_text 6 (at 44.196 162.306) (layer F.SilkS)
@@ -869,6 +869,8 @@
   (segment (start 48.06 154.874) (end 46.76 154.874) (width 0.4) (layer B.Cu) (net 2))
   (segment (start 45.49 154.432) (end 45.466 154.456) (width 0.4) (layer B.Cu) (net 2))
   (segment (start 46.318 154.432) (end 45.49 154.432) (width 0.4) (layer B.Cu) (net 2))
+  (segment (start 48.43132 159.996) (end 47.54372 160.8836) (width 0.5) (layer B.Cu) (net 2))
+  (segment (start 49.53 159.996) (end 48.43132 159.996) (width 0.5) (layer B.Cu) (net 2))
   (segment (start 40.352 161.036) (end 39.878 161.036) (width 0.4) (layer B.Cu) (net 3))
   (segment (start 40.674 161.036) (end 39.878 161.036) (width 0.4) (layer B.Cu) (net 3))
   (segment (start 39.878 161.036) (end 39.624 161.036) (width 0.4) (layer B.Cu) (net 3))
