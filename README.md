@@ -3,7 +3,11 @@
 ## MCUs
 
    - SDCC : mcs51/z80/z180/r2k/r3ka/gbz80/tlcs90/ds390/TININative/ds400/hc08/s08/stm8 3.5.0
-   - SimplicityStudio_v4 flash8051
+   - SimplicityStudio_v5 flash8051
+
+      - Download from Silicon Labs website
+      - Requires 8-bit additonal tools which can be downloaded inside the studio 
+
    - Silicon Labs 8-Bit USB Debug Adapter
 
 ## Basestation (Raspberry Pi)
